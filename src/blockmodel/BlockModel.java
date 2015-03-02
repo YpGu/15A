@@ -9,8 +9,8 @@ import java.util.*;
 public class BlockModel
 {
 //	public static ArrayList<
-	public final static int NUM_BLOCKS = 10;
-	public final static int MAX_ITER = 1000;
+	public final static int NUM_BLOCKS = 2;
+	public final static int MAX_ITER = 10;
 	public static int NUM_NODES;
 	public static String fileDir, dictDir;
 
@@ -19,6 +19,7 @@ public class BlockModel
 	public static double[][] eta;								// block*block (K*K)
 	public static int[] z;									// block assignment (N*1): #Node -> #Block 
 
+	public static Scanner sc;
 
 	/// initialize parameters 
 	public static void
@@ -30,10 +31,12 @@ public class BlockModel
 
 		idMap = new HashMap<String, Integer>();
 		eta = new double[NUM_BLOCKS][NUM_BLOCKS];
-		NUM_NODES = DataReader.readDict(dictDir, idMap, "\t");
+		NUM_NODES = FileParser.readDict(dictDir, idMap, "\t");
 		data = new double[NUM_NODES][NUM_NODES];
+		FileParser.readData(fileDir, idMap, data);
 		z = new int[NUM_NODES];
 
+		sc = new Scanner(System.in);
 
 		// random initialization - z 
 		Random rand = new Random(0);
@@ -44,7 +47,12 @@ public class BlockModel
 		double[][] m = new double[NUM_BLOCKS][NUM_BLOCKS];
 		for (int i = 0; i < NUM_NODES; i++) {
 			for (int j = 0; j < NUM_NODES; j++) {
-				m[z[i]][z[j]] += 1;
+				m[z[i]][z[j]] = 0;
+			}
+		}
+		for (int i = 0; i < NUM_NODES; i++) {
+			for (int j = 0; j < NUM_NODES; j++) {
+				m[z[i]][z[j]] += data[i][j];
 			}
 		}
 		double[] counter = new double[NUM_BLOCKS];				// counter (K*1): #Block -> num of nodes 
@@ -54,16 +62,19 @@ public class BlockModel
 		}
 		for (int i = 0; i < NUM_BLOCKS; i++) {
 			for (int j = 0; j < NUM_BLOCKS; j++) {
-				double neg = counter[i] * counter[j];			// might be too large for almost all the block pairs 
+				double neg = counter[i] * counter[j] - m[i][j];		// might be too large for almost all the block pairs 
 				if (i == j) {
 					neg -= counter[i];
 				}
+		//		System.out.println("m = " + m[i][j] + ", neg = " + neg);
+		//		int gu = sc.nextInt();
+
 				eta[i][j] = (m[i][j]+1)/(m[i][j]+neg+2);
 			}
 		}
 
 		// read data
-		DataReader.readData(fileDir, idMap, data);
+		FileParser.readData(fileDir, idMap, data);
 
 		return;
 	}
@@ -82,17 +93,9 @@ public class BlockModel
 
 			// E-step 
 			for (int n = 0; n < NUM_NODES; n++) {
-//				System.out.println("===N = " + n);
-				double maxObj = -Double.MAX_VALUE, curObj;
 				double maxChange = -Double.MAX_VALUE, curChange;
 				int bestK = -1, preK = z[n];
 				for (int k = 0; k < NUM_BLOCKS; k++) {
-//					z[n] = k;
-//					curObj = Evaluation.calcObj(eta, z);			// need 6-7 ms 
-//					if (curObj > maxObj) {
-//						bestK = k;
-//						maxObj = curObj;
-//					}
 					curChange = Evaluation.changeInObj(data, eta, z, n, k);
 					if (curChange > maxChange) {
 						bestK = k;
@@ -100,7 +103,7 @@ public class BlockModel
 					}						
 				}
 				z[n] = bestK;
-				flag = flag || (bestK == preK);
+				flag = flag && (bestK == preK);
 			}
 
 			if (flag) {
@@ -112,7 +115,7 @@ public class BlockModel
 			double[][] m = new double[NUM_BLOCKS][NUM_BLOCKS];
 			for (int i = 0; i < NUM_NODES; i++) {
 				for (int j = 0; j < NUM_NODES; j++) {
-					m[z[i]][z[j]] += 1;
+					m[z[i]][z[j]] += data[i][j];
 				}
 			}
 			double[] counter = new double[NUM_BLOCKS];				// counter (K*1): #Block -> num of nodes 
@@ -122,13 +125,22 @@ public class BlockModel
 			}
 			for (int i = 0; i < NUM_BLOCKS; i++) {
 				for (int j = 0; j < NUM_BLOCKS; j++) {
-					double neg = counter[i] * counter[j];			// might be too large for almost all the block pairs 
+					double neg = counter[i] * counter[j] - m[i][j];		// might be too large for almost all the block pairs 
 					if (i == j) {
 						neg -= counter[i];
 					}
 					eta[i][j] = (m[i][j]+1)/(m[i][j]+neg+2);
+
+					System.out.println("i = " + i + ", j = " + j + ", m = " + m[i][j] + ", neg = " + neg);
 				}
 			}
+			int gu = sc.nextInt();
+
+			// output z
+			for (int i = 0; i < counter.length; i++) {
+				System.out.printf("%d\t", (int)counter[i]);
+			}
+			System.out.printf("\n");
 
 		}
 	}
@@ -147,6 +159,9 @@ public class BlockModel
 
 		init(args);
 		train();
+
+		FileParser.output("./res_z", z);
+		FileParser.output("./res_eta", eta);
 
 		return;
 	}
