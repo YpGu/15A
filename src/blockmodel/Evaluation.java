@@ -30,12 +30,12 @@ public class Evaluation
 				continue;
 			}
 			int curY = z[y];
-			if (data[x][y] == 0) {						// non-existing
+			if (data[x][y] != 0) {						// existing
 //				System.out.println("y = " + y + ", curY = " + curY);
 				res += Math.log(eta[curX][curY] + Double.MIN_VALUE);
 				res -= Math.log(eta[preX][curY] + Double.MIN_VALUE);
 			}
-			else {								// existing 
+			else {								// non-existing 
 				res += Math.log(1 - eta[curX][curY] + Double.MIN_VALUE);
 				res -= Math.log(1 - eta[preX][curY] + Double.MIN_VALUE);
 			}
@@ -89,4 +89,108 @@ public class Evaluation
 
 		return res;
 	}
+
+/*	// auroc  (TODO) 
+	public static void 
+	auroc(
+		double[][] data
+	) {
+		int N = BlockModel.NUM_NODES;
+
+		Map<Integer, Double> recProbs = new HashMap<Integer, Double>();
+		Map<Integer, Integer> recGroundTruth = new HashMap<Integer, Integer>();
+
+		int oldSize = 0;
+
+		int lid = 0;
+		for (int x = 0; x < N; x++) {
+			for (int y = 0; y < N; y++) {
+				if (data[x][y] != 0) {
+					int index = x * N + y;
+					double prob = eta[z[x]][z[y]];
+					recProbs.put(lid, prob);
+					recGroundTruth.put(lid, 1);			// positive class
+
+					lid++;
+				}
+			}
+		}
+		int posSamples = recProbs.size();
+		System.out.printf("Size of recProbs = %d\n", recProbs.size());
+
+		try (BufferedReader br = new BufferedReader(new FileReader(fileDir_2)))
+		{
+			String currentLine;
+			while ((currentLine = br.readLine()) != null)
+			{
+				// parse line here
+				// line example: 121323132 \t 987987897
+				String[] tokens = currentLine.split("\t");
+				int x = userDictInv.get(tokens[0].trim());
+				int y = userDictInv.get(tokens[tokens.length-1].trim());
+				int index = x * N + y;
+				double p1 = logis(alpha[x] + beta[y]);
+				double p2 = logis(vOut[x] * vIn[y] + vBias[y]);
+				double prob = pi_1[x] * p1 + pi_2[x] * p2;
+
+		//		recProbs.put(index, prob);
+				recProbs.put(lid, prob);
+		//		recGroundTruth.put(index, -1);			// negative class
+				recGroundTruth.put(lid, -1);			// negative class
+
+		//		if (recProbs.size() == oldSize)
+		//		{
+				//	System.out.println("x = " + x + " y = " + y);
+				//	int s = myInput.nextInt();
+		//			recProbs.remove(index);
+		//			recGroundTruth.remove(index);
+		//		}
+		//		oldSize = recProbs.size();
+
+				lid++;
+			}
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		int negSamples = recProbs.size() - posSamples;
+
+		// calculate AUC
+		Map<Integer, Double> sortedProbs = ArrayTools.ValueComparator.sortByValue(recProbs);
+
+		System.out.printf("Size of recProbs = %d\n", recProbs.size());
+		System.out.printf("Size of sortedProbs = %d\n", sortedProbs.size());
+
+		double oldX = 0, oldY = 0, newX = 0, newY = 0, lowerAUC = 0, upperAUC = 0;
+		posSamples = (int)sortedProbs.size()/2;
+		negSamples = (int)sortedProbs.size()/2;
+		for (Map.Entry<Integer, Double> entry: sortedProbs.entrySet())
+		{
+	//		System.out.println(entry.getKey() + "/" + entry.getValue());
+	//		int s = myInput.nextInt();
+			int curKey = entry.getKey();
+			if (recGroundTruth.get(curKey) > 0)
+			//	newY += 1.0/arrLen;
+				newY += 1.0/posSamples;
+			else
+			//	newX += 1.0/arrLen;
+				newX += 1.0/negSamples;
+			upperAUC += (newX - oldX) * newY;
+			lowerAUC += (newX - oldX) * oldY;
+
+			oldX = newX;
+			oldY = newY;
+		}
+
+		System.out.println("posSamples = " + posSamples);
+		System.out.println("negSamples = " + negSamples);
+		System.out.println("matSizePos = " + matSizePos);
+		System.out.println("AUC between " + lowerAUC + " and " + upperAUC);
+		System.out.println("newY = " + newY + " newX = " + newX);
+
+		return;
+	}
+*/
+
 }
