@@ -8,7 +8,7 @@ import java.util.*;
 
 public class BlockModel
 {
-	public final static int NUM_BLOCKS = 10;
+	public final static int NUM_BLOCKS = 5;
 	public final static int MAX_ITER = 10;
 	public final static int NUM_INITS = 10;							// init the configuration multiple times, and keep the one with largest likelihood 
 	public static int NUM_NODES;
@@ -188,9 +188,15 @@ public class BlockModel
 		}
 
 		double maxObj = -Double.MAX_VALUE, curObj;
-		for (int i = 0; i < NUM_INITS; i++) {
-			System.out.println("Initialization #" + i);
-			init(args, i);
+		int init = 0;
+		while (true) {
+			// TODO: check if any block contains no nodes 
+			if (init > NUM_INITS) {
+				break;
+			}
+
+			System.out.println("Initialization #" + init);
+			init(args, init);
 			curObj = train();
 			System.out.println("Objective function = " + curObj);
 			if (curObj > maxObj) {
@@ -198,6 +204,7 @@ public class BlockModel
 				optEta = eta;
 				optZ = z;
 			}
+			init += 1;
 		}
 
 		// output z
