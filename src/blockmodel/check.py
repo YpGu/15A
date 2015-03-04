@@ -7,7 +7,6 @@ import sys
 
 if __name__ == '__main__':
 
-	print len(sys.argv)
 	if len(sys.argv) != 3:
 		print 'Usage: python check.py <relation> <#blocks>'
 		print 'Example: python check.py friend 2'
@@ -58,7 +57,7 @@ if __name__ == '__main__':
 				nO += 1
 			
 		print 'Block ' + str(b) + ':'
-		print '\tTotal numeber = ' + str(len(blockAssignment[b]))
+		print '\tTotal number = ' + str(len(blockAssignment[b]))
 		print '\tNumber of R = ' + str(nR)
 		print '\tNumber of D = ' + str(nD)
 		print '\tNumber of O = ' + str(nO)
