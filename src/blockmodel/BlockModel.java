@@ -8,9 +8,9 @@ import java.util.*;
 
 public class BlockModel
 {
-	public final static int NUM_BLOCKS = 5;
+	public final static int NUM_BLOCKS = 3;
 	public final static int MAX_ITER = 10;
-	public final static int NUM_INITS = 10;							// init the configuration multiple times, and keep the one with largest likelihood 
+	public final static int NUM_INITS = 5;							// init the configuration multiple times, and keep the one with largest likelihood 
 	public static int NUM_NODES;
 	public static String fileDir, dictDir;
 
@@ -189,6 +189,8 @@ public class BlockModel
 
 		double maxObj = -Double.MAX_VALUE, curObj;
 		int init = 0;
+		double[] counter = new double[NUM_BLOCKS];				// counter (K*1): #Block -> num of nodes 
+		boolean zeroFlag = true;
 		while (true) {
 			// TODO: check if any block contains no nodes 
 			if (init > NUM_INITS) {
@@ -205,10 +207,24 @@ public class BlockModel
 				optZ = z;
 			}
 			init += 1;
+
+			// check empty blocks (for [current] block): break if all blocks are non-empty 
+			for (int k = 0; k < NUM_BLOCKS; k++) {
+				counter[k] = 0;
+			}
+			for (int i = 0; i < NUM_NODES; i++) {
+				int block = z[i];
+				counter[block] += 1;
+			}
+			for (int k = 0; k < NUM_BLOCKS; k++) {
+				zeroFlag = zeroFlag && counter[k];
+			}
+			if (zeroFlag) {
+				break;
+			}
 		}
 
 		// output z
-		double[] counter = new double[NUM_BLOCKS];				// counter (K*1): #Block -> num of nodes 
 		for (int i = 0; i < NUM_NODES; i++) {
 			int block = optZ[i];
 			counter[block] += 1;
