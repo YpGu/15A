@@ -43,22 +43,22 @@ public class BlockModel
 
 		// random initialization - z 
 		Random rand = new Random(10*init+1);
-		for (String s: trainData.dict) {
+		for (String s: trainData.getDict()) {
 			z.put(s, rand.nextInt(NUM_BLOCKS));
 		}
 
 		// random initialization - eta 
 		double[][] m = new double[NUM_BLOCKS][NUM_BLOCKS];
 		for (Map.Entry<Tuple<String, String>, Double> e: trainData.getMat().entrySet()) {
-			String x = e.getKey.getX();
-			String y = e.getKey.getY();
+			String x = e.getKey().getX();
+			String y = e.getKey().getY();
 			double v = e.getValue();
 			int zx = z.get(x);
 			int zy = z.get(y);
 			m[zx][zy] += v;
 		}
 		double[] counter = new double[NUM_BLOCKS];				// counter (K*1): #Block -> num of nodes 
-		for (String i: trainData.dict) {					// TODO: if we iterate through trainData.dict, some nodes will never appear in the actual training dataset (in test only) 
+		for (String i: trainData.getDict()) {					// TODO: if we iterate through trainData.dict, some nodes will never appear in the actual training dataset (in test only) 
 			int block = z.get(i);
 			counter[block] += 1;
 		}
@@ -99,7 +99,7 @@ public class BlockModel
 			// E-step 
 			long sTime = System.currentTimeMillis();
 
-			for (String s: trainData.dict) {
+			for (String s: trainData.getDict()) {
 				int bestK = z.get(s), preK = z.get(s);
 				double maxChange = -Double.MIN_VALUE, curChange;
 

@@ -8,7 +8,7 @@ import java.io.*;
 public class SparseMatrix
 {
 	private static Map<Tuple<String, String>, Double> mat;
-	public static Set<String> dict;
+	private static Set<String> dict;
 	private static Map<String, Set<String>> outNeighborSet;
 	private static Map<String, Set<String>> inNeighborSet;
 	private static Map<String, Set<String>> outNeighborComplementSet;		// will not contain x itself 
@@ -29,6 +29,11 @@ public class SparseMatrix
 		return mat;
 	}
 
+	public static Set<String>
+	getDict() {
+		return dict;
+	}
+
 	public static double 
 	get(String row, String col) {
 		Tuple<String, String> t = new Tuple<String, String>(row, col);
@@ -39,14 +44,6 @@ public class SparseMatrix
 		catch (java.lang.NullPointerException e) {
 			return 0;
 		}
-//		double a = mat.get(t);
-//		return a;
-//		if (mat.get(t) != null) {
-//			return mat.get(t);
-//		}
-//		else {
-//			return 0;
-//		}
 	}
 
 	public static void 
