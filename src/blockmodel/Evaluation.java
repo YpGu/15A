@@ -10,10 +10,10 @@ public class Evaluation
 	/// calculate the change in objective function, by changing the class of one node only 
 	public static double
 	changeInObj(
-		double[][] data,
+		SparseMatrix data,
 		double[][] eta,
-		int[] z,
-		int x,									// node 
+		Map<String, Integer> z,
+		String x,									// node 
 		int newClassLabelForX
 	) {
 		long sTime = System.currentTimeMillis();
@@ -23,22 +23,30 @@ public class Evaluation
 		}
 
 		double res = 0;
-		int preX = z[x], curX = newClassLabelForX;
+		int preX = z.get(x), curX = newClassLabelForX;
 
-		for (int y = 0; y < data.length; y++) {
-			if (x == y) {
-				continue;
-			}
-			int curY = z[y];
-			if (data[x][y] != 0) {						// existing
-//				System.out.println("y = " + y + ", curY = " + curY);
-				res += Math.log(eta[curX][curY] + Double.MIN_VALUE);
-				res -= Math.log(eta[preX][curY] + Double.MIN_VALUE);
-			}
-			else {								// non-existing 
-				res += Math.log(1 - eta[curX][curY] + Double.MIN_VALUE);
-				res -= Math.log(1 - eta[preX][curY] + Double.MIN_VALUE);
-			}
+		// x -> y
+		for (String y: data.getRow(x)) {
+			int curY = z.get(y);
+			res -= Math.log(eta[preX][curY] + Double.MIN_VALUE);
+			res += Math.log(eta[curX][curY] + Double.MIN_VALUE);
+		}
+		for (String y: data.getRowComplement(x)) {
+			int curY = z.get(y);
+			res -= Math.log(1 - eta[preX][curY] + Double.MIN_VALUE);
+			res += Math.log(1 - eta[curX][curY] + Double.MIN_VALUE);
+		}
+
+		// y -> x
+		for (String y: data.getColumn(x)) {
+			int curY = z.get(y);
+			res -= Math.log(eta[curY][preX] + Double.MIN_VALUE);
+			res += Math.log(eta[curY][curX] + Double.MIN_VALUE);
+		}
+		for (String y: data.getColumnComplement(x)) {
+			int curY = z.get(y);
+			res -= Math.log(1 - eta[curY][preX] + Double.MIN_VALUE);
+			res += Math.log(1 - eta[curY][curX] + Double.MIN_VALUE);
 		}
 
 		long fTime = System.currentTimeMillis();
@@ -50,25 +58,54 @@ public class Evaluation
 
 	/// calculate the objective function (log-likelihood of the entire network) 
 	public static double
-	calcObj(
-		double[][] eta,
-		int[] z
-	) {
+	calcObj(SparseMatrix data, double[][] eta, Map<String, Integer> z) {
 		long sTime = System.currentTimeMillis();
 
 		int NUM_BLOCKS = BlockModel.NUM_BLOCKS;
-		int NUM_NODES = BlockModel.NUM_NODES;
 
 		double[][] m = new double[NUM_BLOCKS][NUM_BLOCKS];
-		for (int i = 0; i < NUM_NODES; i++) {
-			for (int j = 0; j < NUM_NODES; j++) {
-				m[z[i]][z[j]] += 1;
-			}
+
+
+		for (Map.Entry<Tuple<String, String>, Double> e: data.getMat().entrySet()) {
+			String x = e.getKey().getX();
+			String y = e.getKey().getY();
+			double v = e.getValue();
+			int zx = z.get(x);
+			int zy = z.get(y);
+
+			m[zx][zy] += v;
 		}
 
+/*
+		for (Map.Entry<String, Integer> i: z.entrySet()) {
+//			long aTime = System.currentTimeMillis();
+
+			String x = i.getKey();
+			int zx = i.getValue();
+			for (Map.Entry<String, Integer> j: z.entrySet()) {
+				String y = j.getKey();
+				int zy = j.getValue();
+				double v = data.get(x, y);
+	
+				System.out.println("v = " + v);
+				Scanner sc = new Scanner(System.in);
+				int gu = sc.nextInt();
+	
+				m[zx][zy] += v;
+			}
+
+//			long bTime = System.currentTimeMillis();
+//			System.out.println("Time: " + (bTime-aTime));
+//			Scanner sc = new Scanner(System.in);
+//			int gu = sc.nextInt();
+		}
+*/
+		long sTime1 = System.currentTimeMillis();
+//		System.out.println("Time: " + (sTime1-sTime));
+
 		double[] counter = new double[NUM_BLOCKS];				// counter (K*1): #Block -> num of nodes 
-		for (int i = 0; i < NUM_NODES; i++) {
-			int block = z[i];
+		for (Map.Entry<String, Integer> i: z.entrySet()) {
+			int block = i.getValue();
 			counter[block] += 1;
 		}
 
@@ -85,7 +122,8 @@ public class Evaluation
 		}
 
 		long fTime = System.currentTimeMillis();
-//		System.out.println("Time: " + (fTime-sTime));
+
+//		System.out.println("Time: " + (fTime-sTime1));
 
 		return res;
 	}
