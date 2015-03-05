@@ -1,7 +1,11 @@
 /**
-	Implementation of the model in Discovering Latent Classes in Relational Data (Kemp 2004)
-	Every node has a hard class label and the probability that two nodes link depends solely on the blocks they belong to 
-	Here we do not use sampling to update parameters; instead we use EM.
+	Implementation of the model in Discovering Latent Classes in Relational Data (Kemp 2004);
+	Every node has a hard class label and the probability that two nodes link depends solely on the blocks they belong to;
+	Here we do not use sampling to update parameters; instead we use EM;
+
+	Time complexity may probably be an issue when the number of nodes is big;
+
+	Todo: dictionary of the training data and all.
 **/
 
 import java.util.*;
@@ -68,8 +72,6 @@ public class BlockModel
 				if (i == j) {
 					pb -= counter[i];
 				}
-		//		System.out.println("m = " + m[i][j] + ", neg = " + neg);
-		//		int gu = sc.nextInt();
 				if (pb != 0) {
 					eta[i][j] = (m[i][j]+1)/(pb+2);
 				}
@@ -87,7 +89,7 @@ public class BlockModel
 	}
 
 
-	/// estimate parameters using EM algorithm 
+	/// estimate parameters using two-step EM-like algorithm 
 	public static double
 	train(SparseMatrix data) {
 		for (int iter = 0; iter < MAX_ITER; iter++) {
@@ -96,7 +98,7 @@ public class BlockModel
 			// convergence checker 
 			boolean flag = true;
 
-			// E-step 
+			// Step 1 
 			long sTime = System.currentTimeMillis();
 
 			for (String s: trainData.getDict()) {
@@ -135,15 +137,15 @@ public class BlockModel
 			}
 
 //// check blocks
-	double[] counter = new double[NUM_BLOCKS];				// counter (K*1): #Block -> num of nodes 
-	for (Map.Entry<String, Integer> i: z.entrySet()) {
-		int block = i.getValue();
-		counter[block] += 1;
-	}
-	for (int i = 0; i < counter.length; i++) {
-		System.out.printf("\t%d", (int)counter[i]);
-	}
-	System.out.printf("\n");
+			double[] counter = new double[NUM_BLOCKS];				// counter (K*1): #Block -> num of nodes 
+			for (Map.Entry<String, Integer> i: z.entrySet()) {
+				int block = i.getValue();
+				counter[block] += 1;
+			}
+			for (int i = 0; i < counter.length; i++) {
+				System.out.printf("\t%d", (int)counter[i]);
+			}
+			System.out.printf("\n");
 ///////
 
 			long fTime = System.currentTimeMillis();
@@ -151,7 +153,7 @@ public class BlockModel
 
 			System.out.println("\tObj = " + Evaluation.calcObj(trainData, eta, z));
 
-			// M-step 
+			// Step 2 
 			double[][] m = new double[NUM_BLOCKS][NUM_BLOCKS];
 
 			for (Map.Entry<Tuple<String, String>, Double> e: trainData.getMat().entrySet()) {
@@ -162,14 +164,6 @@ public class BlockModel
 				int zy = z.get(y);
 				m[zx][zy] += 1;
 			}
-
-			counter = null;
-			counter = new double[NUM_BLOCKS];				// counter (K*1): #Block -> num of nodes 
-			for (Map.Entry<String, Integer> i: z.entrySet()) {
-				int block = i.getValue();
-				counter[block] += 1;
-			}
-
 
 			for (int i = 0; i < NUM_BLOCKS; i++) {
 				for (int j = 0; j < NUM_BLOCKS; j++) {
