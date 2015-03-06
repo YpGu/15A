@@ -28,25 +28,33 @@ public class Evaluation
 		// x -> y
 		for (String y: data.getRow(x)) {
 			int curY = z.get(y);
-			res -= Math.log(eta[preX][curY] + Double.MIN_VALUE);
-			res += Math.log(eta[curX][curY] + Double.MIN_VALUE);
+			if (eta[preX][curY] != 0)
+				res -= Math.log(eta[preX][curY] + Double.MIN_VALUE);
+			if (eta[curX][curY] != 0)
+				res += Math.log(eta[curX][curY] + Double.MIN_VALUE);
 		}
 		for (String y: data.getRowComplement(x)) {
 			int curY = z.get(y);
-			res -= Math.log(1 - eta[preX][curY] + Double.MIN_VALUE);
-			res += Math.log(1 - eta[curX][curY] + Double.MIN_VALUE);
+			if (eta[preX][curY] != 0)
+				res -= Math.log(1 - eta[preX][curY] + Double.MIN_VALUE);
+			if (eta[curX][curY] != 0)
+				res += Math.log(1 - eta[curX][curY] + Double.MIN_VALUE);
 		}
 
 		// y -> x
 		for (String y: data.getColumn(x)) {
 			int curY = z.get(y);
-			res -= Math.log(eta[curY][preX] + Double.MIN_VALUE);
-			res += Math.log(eta[curY][curX] + Double.MIN_VALUE);
+			if (eta[curY][preX] != 0)
+				res -= Math.log(eta[curY][preX] + Double.MIN_VALUE);
+			if (eta[curY][curX] != 0)
+				res += Math.log(eta[curY][curX] + Double.MIN_VALUE);
 		}
 		for (String y: data.getColumnComplement(x)) {
 			int curY = z.get(y);
-			res -= Math.log(1 - eta[curY][preX] + Double.MIN_VALUE);
-			res += Math.log(1 - eta[curY][curX] + Double.MIN_VALUE);
+			if (eta[curY][preX] != 0)
+				res -= Math.log(1 - eta[curY][preX] + Double.MIN_VALUE);
+			if (eta[curY][curX] != 0)
+				res += Math.log(1 - eta[curY][curX] + Double.MIN_VALUE);
 		}
 
 		long fTime = System.currentTimeMillis();
