@@ -78,12 +78,11 @@ public class Evaluation
 	/// calculate the objective function (log-likelihood of the entire network) 
 	public static double
 	calcObj(SparseMatrix data, double[][] eta, Map<String, Integer> z) {
-		long sTime = System.currentTimeMillis();
+//		long sTime = System.currentTimeMillis();
 
 		int NUM_BLOCKS = BlockModel.NUM_BLOCKS;
 
 		double[][] m = new double[NUM_BLOCKS][NUM_BLOCKS];
-
 
 		for (Map.Entry<Tuple<String, String>, Double> e: data.getMat().entrySet()) {
 			String x = e.getKey().getX();
@@ -95,34 +94,10 @@ public class Evaluation
 			m[zx][zy] += v;
 		}
 
-/*
-		for (Map.Entry<String, Integer> i: z.entrySet()) {
-//			long aTime = System.currentTimeMillis();
-
-			String x = i.getKey();
-			int zx = i.getValue();
-			for (Map.Entry<String, Integer> j: z.entrySet()) {
-				String y = j.getKey();
-				int zy = j.getValue();
-				double v = data.get(x, y);
-	
-				System.out.println("v = " + v);
-				Scanner sc = new Scanner(System.in);
-				int gu = sc.nextInt();
-	
-				m[zx][zy] += v;
-			}
-
-//			long bTime = System.currentTimeMillis();
-//			System.out.println("Time: " + (bTime-aTime));
-//			Scanner sc = new Scanner(System.in);
-//			int gu = sc.nextInt();
-		}
-*/
-		long sTime1 = System.currentTimeMillis();
+//		long sTime1 = System.currentTimeMillis();
 //		System.out.println("Time: " + (sTime1-sTime));
 
-		double[] counter = new double[NUM_BLOCKS];				// counter (K*1): #Block -> num of nodes 
+		double[] counter = new double[NUM_BLOCKS];						// counter (K*1): #Block -> num of nodes 
 		for (Map.Entry<String, Integer> i: z.entrySet()) {
 			int block = i.getValue();
 			counter[block] += 1;
@@ -131,7 +106,7 @@ public class Evaluation
 		double res = 0;
 		for (int i = 0; i < NUM_BLOCKS; i++) {
 			for (int j = 0; j < NUM_BLOCKS; j++) {
-				double neg = counter[i] * counter[j];			// might be too large for almost all the block pairs 
+				double neg = counter[i] * counter[j];					// might be too large for almost all the block pairs 
 				if (i == j) {
 					neg -= counter[i];
 				}
@@ -162,30 +137,32 @@ public class Evaluation
 		for (String x: data.getDict()) {
 			Set<String> s1 = data.getRow(x);
 			for (String y: s1) {								// x -> y
+				int zx = z.get(x);
+				int zy = z.get(y);
 				double p1 = eta[zx][zy];
-				double p2 = logis(vOut.get(zx) * vIn.get(zy) + vBias.get(zy));
-				res += Math.log( (1-pi.get(zx)) * p1 + pi.get(zy) * p2 + Double.MIN_VALUE );
+				double p2 = logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
+				res += Math.log( (1-pi.get(x)) * p1 + pi.get(y) * p2 + Double.MIN_VALUE );
 			}
+		}
 		for (String x: nData.getDict()) {
 			Set<String> s2 = data.getRow(x);
 			for (String y: s2) {								// x !-> y
+				int zx = z.get(x);
+				int zy = z.get(y);
 				double p1 = eta[zx][zy];
-				double p2 = logis(vOut.get(zx) * vIn.get(zy) + vBias.get(zy));
-				res += Math.log( 1 - (1-pi.get(zx)) * p1 - pi.get(zy) * p2 + Double.MIN_VALUE ) * c;
+				double p2 = logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
+				res += Math.log( 1 - (1-pi.get(x)) * p1 - pi.get(y) * p2 + Double.MIN_VALUE ) * c;
 			}
 		}
 
 		// regularization
 		if (reg != 0) {
 			for (String x: data.getDict()) {
-				res -= 0.5 * reg * (
-					vOut.get(x) * vOut.get(x)
-					+ vIn.get(x) * vIn.get(x));
+				res -= 0.5 * reg * (vOut.get(x) * vOut.get(x) + vIn.get(x) * vIn.get(x));
 			}
 		}
 
-		if (res != res)
-		{
+		if (res != res) {
 /*
 			output("./" + rel + "Res/pi2", pi_2);
 			output("./" + rel + "Res/alpha", alpha);
@@ -202,6 +179,7 @@ public class Evaluation
 		return res;
 	}
 
+}
 
 /*	// auroc  (TODO) 
 	public static void 
@@ -306,4 +284,3 @@ public class Evaluation
 	}
 */
 
-}

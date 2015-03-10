@@ -15,11 +15,11 @@ import java.util.*;
 public class UpdateIDP
 {
 	/// IDP update: using gradient descent 
-	public static boolean
+	public static void 
 	update(
 		SparseMatrix data, SparseMatrix nData,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
-		Map<String, Double> pi, double[][] gamma,						// gamma is the estimated weight before IDP mixture 
+		Map<String, Double> pi, Map<Tuple<String, String>, Double> gamma,			// gamma is the estimated weight before IDP mixture 
 		double c,										// sample weight 
 		double reg,										// regularization coefficient 
 		double lr										// learning rate 
@@ -32,7 +32,8 @@ public class UpdateIDP
 			Set<String> s1 = data.getRow(x);
 			for (String y: s1) {								// x -> y
 				double p = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
-				double grad = gamma[x][y] * (1-p);
+				Tuple<String, String> t = new Tuple<String, String>(x, y);
+				double grad = gamma.get(t) * (1-p);
 				gradOut.put(x, gradOut.get(x) + vIn.get(y) * grad);
 				gradIn.put(y, gradIn.get(y) + vOut.get(x) * grad);
 				gradBias.put(y, gradBias.get(y) + grad);
@@ -42,7 +43,8 @@ public class UpdateIDP
 			Set<String> s2 = nData.getRow(x);
 			for (String y: s2) {								// x !-> y
 				double p = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
-				double grad = gamma[x][y] * p;
+				Tuple<String, String> t = new Tuple<String, String>(x, y);
+				double grad = gamma.get(t) * (1-p);
 				gradOut.put(x, gradOut.get(x) - vIn.get(y) * grad * c);
 				gradIn.put(y, gradIn.get(y) - vOut.get(x) * grad * c);
 				gradBias.put(y, gradBias.get(y) - grad * c);
@@ -73,10 +75,12 @@ public class UpdateIDP
 		}
 		while (newObj <= oldObj && lsIter < 10 && numIter > 0);
 */
-		for (int x = 0; x < N; x++) {
+		for (String x: data.getDict()) {
 			vOut.put(x, vOut.get(x) + lr * gradOut.get(x));
 			vIn.put(x, vIn.get(x) + lr * gradIn.get(x));
 			vBias.put(x, vBias.get(x) + lr * gradBias.get(x));
 		}
+
+		return;
 	}
 }

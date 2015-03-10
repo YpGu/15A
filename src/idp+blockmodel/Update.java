@@ -2,6 +2,8 @@
 	Update.java: update rule of the unified model.
 **/
 
+import java.util.*;
+
 public class Update
 {
 	// E-step: calculate gamma 
@@ -37,8 +39,18 @@ public class Update
 	}
 
 	public static boolean
-	update() {
-		// todo 
+	update(
+		SparseMatrix data, SparseMatrix nData, 
+		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias, 
+		Map<String, Integer> z, double[][] eta,	
+		Map<String, Double> pi, Map<Tuple<String, String>, Double> gamma,
+		double c, double reg, double lr
+	) {
+		EStep(data, vOut, vIn, vBias, z, eta, pi, gamma);
+		UpdateIDP.update(data, nData, vOut, vIn, vBias, pi, gamma, c, reg, lr);
+		UpdateBM.updateHard(data, z, eta);
+		// todo
+
 		return true;
 	}
 }
