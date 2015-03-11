@@ -16,9 +16,12 @@ public class BlockModel
 	public final static int MAX_ITER = 100;						// Maximum number of iterations until convergence 
 	public final static int NUM_INITS = 5;						// init the configuration multiple times, and keep the one with largest likelihood 
 	public final static boolean WRITE = false;
-	public static String fileDir, dictDir;
 
-	public static SparseMatrix trainData, testData;					// Graph data (training/testing) 
+	public static double sw;							// sample weight or 1 
+	public static double reg;							// regularization coefficient 
+
+	public static SparseMatrix trainPositiveData, trainNegativeData;		// Graph data (training: existing/non-existing) 
+	public static SparseMatrix testPositiveData, testNegativeData;			// Graph data (testing: existing/non-existing) 
 
 	public static Map<String, Double> vOut;						// idp - out Ideal Point 
 	public static Map<String, Double> vIn;
@@ -51,14 +54,21 @@ public class BlockModel
 	public static void
 	init(String[] args, int init) {
 
-		fileDir = args[0];
-		dictDir = args[1];
-		NUM_BLOCKS = Integer.parseInt(args[2]);
+		String rel = args[0];
+		String num = "3k";
+		NUM_BLOCKS = Integer.parseInt(args[1]);
+		reg = Double.parseDouble(args[2]);
 
-		trainData = new SparseMatrix();
-		testData = new SparseMatrix();
-		FileParser.readData(dictDir, fileDir + ".train", trainData);
-		FileParser.readData(dictDir, fileDir + ".test", testData);
+		trainPositiveData = new SparseMatrix(); trainNegativeData = new SparseMatrix();
+		testPositiveData = new SparseMatrix(); testNegativeData = new SparseMatrix();
+		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".train", trainPositiveData);
+		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".train", trainNegativeData);
+		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".test", testPositiveData);
+		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".test", trainNegativeData);
+
+		// sample weight 
+		sw = trainPositiveData.getDictSize() * (trainPositiveData.getDictSize()-1) / trainPositiveData.getSize() - 1;
+//		double c = 1;
 
 		Random rand = new Random(10*init+1);
 
@@ -67,7 +77,7 @@ public class BlockModel
 		vIn = new HashMap<String, Double>();
 		vBias = new HashMap<String, Double>();
 		pi = new HashMap<String, Double>();
-		for (String s: trainData.getDict()) {
+		for (String s: trainPositiveData.getDict()) {
 			vOut.put(s, (rand.nextDouble()-0.5)*1);
 			vIn.put(s, (rand.nextDouble()-0.5)*1);
 			vBias.put(s, (rand.nextDouble()-0.5)*1);
@@ -76,13 +86,14 @@ public class BlockModel
 
 		// random initialization - z/eta  
 		z = new HashMap<String, Integer>();
-		for (String s: trainData.getDict()) {
+		for (String s: trainPositiveData.getDict()) {
 			z.put(s, rand.nextInt(NUM_BLOCKS));
 		}
 		eta = new double[NUM_BLOCKS][NUM_BLOCKS];
-		UpdateBM.updateParamHard(trainData, z, eta);
+		UpdateBM.updateParamHard(trainPositiveData, z, eta);
 
-		System.out.println("Objective at init = " + Evaluation.calcObj(trainData, eta, z));
+//		System.out.println("Objective at init = " + Evaluation.calcObj(trainPositiveData, eta, z));
+		System.out.println("Objective at init = " + Evaluation.calcObj(trainPositiveData, trainNegativeData, eta, z, vOut, vIn, vBias, pi, sw, reg));
 
 		return;
 	}
@@ -90,10 +101,13 @@ public class BlockModel
 
 	/// estimate parameters using two-step EM-like algorithm 
 	public static double
-	train(SparseMatrix data) {
+	train() {
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("\t---- Iter = " + iter + " ----");
-			if (UpdateBM.updateHard(data, z, eta)) {
+			double lr = 0.001;
+			// TODO: change to update.***
+			if (Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr)) {
+//			if (UpdateBM.updateHard(data, z, eta)) {
 				break;
 			}
 		}
@@ -102,7 +116,7 @@ public class BlockModel
 		System.out.println("    Final Block Assignments:");
 		UpdateBM.checkBlocks(z, NUM_BLOCKS);
 
-		return Evaluation.calcObj(trainData, eta, z);
+		return Evaluation.calcObj(trainPositiveData, eta, z);
 	}
 
 
@@ -110,8 +124,8 @@ public class BlockModel
 	public static void
 	main(String[] args) {
 		if (args.length != 3) {
-			System.out.println("Usage: java BlockModel <fileDir> <dictDir> <#blocks>");
-			System.out.println("Example: java BlockModel ../../data/3k_mention/mention_list_3k ../../data/3k_mention/mention_dict_3k 10");
+			System.out.println("Usage: java BlockModel <relation> <#blocks> <reg>");
+			System.out.println("Example: java BlockModel friend 10 0.01");
 			System.exit(0);
 		}
 
@@ -120,7 +134,7 @@ public class BlockModel
 		while (true) {
 			System.out.println("------ Initialization #" + init + " ------");
 			init(args, init);
-			curObj = train(trainData);
+			curObj = train();
 			System.out.println("Objective function = " + curObj);
 			if (curObj > maxObj) {
 				maxObj = curObj; optEta = eta;

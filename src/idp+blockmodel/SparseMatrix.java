@@ -13,7 +13,6 @@ public class SparseMatrix
 	private static Map<String, Set<String>> inNeighborSet;
 	private static Map<String, Set<String>> outNeighborComplementSet;		// will not contain x itself 
 	private static Map<String, Set<String>> inNeighborComplementSet;
-	public static int dictSize;
 
 	public SparseMatrix() {
 		mat = new HashMap<Tuple<String, String>, Double>();
@@ -71,6 +70,16 @@ public class SparseMatrix
 	public static Set<String> 
 	getColumnComplement(String col) {
 		return inNeighborComplementSet.get(col);
+	}
+
+	public static int
+	getSize() {
+		return mat.size();
+	}
+
+	public static int
+	getDictSize() {
+		return dict.size();
 	}
 
 	public static void

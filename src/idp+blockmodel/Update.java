@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Update
 {
-	// E-step: calculate gamma 
+	/// E-step: calculate gamma 
 	public static void
 	EStep(
 		SparseMatrix data,
@@ -38,19 +38,80 @@ public class Update
 		return;
 	}
 
+
+	/// TODO: update pi
+	public static void
+	updatePi(
+		SparseMatrix positiveData, SparseMatrix negativeData,
+		Map<String, Double> pi, Map<Tuple<String, String>, Double> gamma,
+		double c									// sample weight 
+	) {
+		Map<String, Double> piDeno = new HashMap<String, Double>();
+
+		for (Map.Entry<String, Double> e: pi.entrySet()) {
+			String x = e.getKey();
+			pi.put(x, 0.0);
+		}
+
+		for (String x: positiveData.getDict()) {
+			for (String y: positiveData.getRow(x)) {
+				Tuple<String, String> t = new Tuple<String, String>(x, y);
+				double v1 = pi.get(x);
+				double v2 = gamma.get(t);
+				double val = pi.get(x) + gamma.get(t);
+				pi.put(x, val);
+				piDeno.put(x, piDeno.get(x) + 1);
+			}
+		}
+		for (String x: negativeData.getDict()) {
+			for (String y: negativeData.getRow(x)) {
+				Tuple<String, String> t = new Tuple<String, String>(x, y);
+				double val = pi.get(x) + gamma.get(t) * c;
+				pi.put(x, val);
+				piDeno.put(x, piDeno.get(x) + c);
+			}
+		}
+
+		for (String x: positiveData.getDict()) {
+			if (piDeno.get(x) != 0) {
+				double val = pi.get(x) / piDeno.get(x);
+				pi.put(x, val);
+			}
+			else {
+				pi.put(x, 0.5);
+			}
+		}
+
+		return;
+	}
+
+
+	/// update method for the unified model 
 	public static boolean
 	update(
 		SparseMatrix data, SparseMatrix nData, 
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias, 
 		Map<String, Integer> z, double[][] eta,	
-		Map<String, Double> pi, Map<Tuple<String, String>, Double> gamma,
+		Map<String, Double> pi, 
 		double c, double reg, double lr
 	) {
-		EStep(data, vOut, vIn, vBias, z, eta, pi, gamma);
-		UpdateIDP.update(data, nData, vOut, vIn, vBias, pi, gamma, c, reg, lr);
-		UpdateBM.updateHard(data, z, eta);
-		// todo
+		Map<Tuple<String, String>, Double> gamma = new HashMap<Tuple<String, String>, Double>();
 
-		return true;
+		System.out.println("E-Step: estimating gamma");
+		EStep(data, vOut, vIn, vBias, z, eta, pi, gamma);
+
+		System.out.println("Size of gamma = " + gamma.size());
+
+		System.out.println("Updating Pi");
+		updatePi(data, nData, pi, gamma, c);
+
+		System.out.println("Updating IDP parameters");
+		UpdateIDP.update(data, nData, vOut, vIn, vBias, pi, gamma, c, reg, lr);
+
+		System.out.println("Updating BM parameters");
+		boolean res = UpdateBM.updateHard(data, z, eta);
+		// todo: check correctness 
+
+		return res;
 	}
 }
