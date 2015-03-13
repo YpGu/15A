@@ -15,6 +15,7 @@ public class Update
 		Map<String, Double> pi, Map<Tuple<String, String>, Double> gamma
 	) {
 		for (String x: data.getDict()) {
+			int count = 0;
 			Set<String> s1 = data.getRow(x);
 			for (String y: s1) {								// x -> y
 				Tuple<String, String> t = new Tuple<String, String>(x, y);
@@ -23,6 +24,7 @@ public class Update
 				double deno = (1-pi.get(x)) * p1 + pi.get(x) * p2;
 				double val = p2 / deno;
 				gamma.put(t, val);
+				count += 1;
 			}
 			Set<String> s2 = data.getRowComplement(x);
 			for (String y: s2) {								// x !-> y
@@ -32,14 +34,28 @@ public class Update
 				double deno = (1-pi.get(x)) * p1 + pi.get(x) * p2;
 				double val = p2 / deno;
 				gamma.put(t, val);
+				count += 1;
 			}
+/*
+			if (count != 2998) {
+				System.out.println("count = " + count + ", x = " + x);
+				Tuple<String, String> t = new Tuple<String, String>(x,x);
+				System.out.println("val = " + gamma.get(t));
+				Scanner sc = new Scanner(System.in);
+				int gu = sc.nextInt();
+			}
+*/
 		}
+
+//		System.out.println("===================================");
+//		Tuple<String, String> t = new Tuple<String, String>("14412533", "331268118");
+//		System.out.println("value = " + gamma.get(t));
 
 		return;
 	}
 
 
-	/// TODO: update pi
+	/// update pi
 	public static void
 	updatePi(
 		SparseMatrix positiveData, SparseMatrix negativeData,
@@ -57,10 +73,21 @@ public class Update
 			for (String y: positiveData.getRow(x)) {
 				Tuple<String, String> t = new Tuple<String, String>(x, y);
 				double v1 = pi.get(x);
-				double v2 = gamma.get(t);
-				double val = pi.get(x) + gamma.get(t);
-				pi.put(x, val);
-				piDeno.put(x, piDeno.get(x) + 1);
+				try {
+					double v2 = gamma.get(t);
+					double val = pi.get(x) + gamma.get(t);
+					pi.put(x, val);
+					piDeno.put(x, piDeno.get(x) + 1);
+				}
+				catch (java.lang.NullPointerException e) {
+					System.out.println("t = " + t.getX() + " " + t.getY());
+					System.out.println("Size = " + positiveData.getRow(x).size());
+					System.out.println("Size = " + positiveData.getRowComplement(x).size());
+					System.out.println("Size = " + positiveData.getColumn(y).size());
+					System.out.println("Size = " + positiveData.getColumnComplement(y).size());
+					Scanner sc = new Scanner(System.in);
+					int gu = sc.nextInt();
+				}
 			}
 		}
 		for (String x: negativeData.getDict()) {
