@@ -90,7 +90,7 @@ public class UpdateBM
 //		System.out.println("Time = " + (fTime-sTime));
 
 		checkBlocks(z, NUM_BLOCKS);
-		System.out.println("\tObj = " + Evaluation.calcObj(trainData, eta, z));
+		System.out.println("\tObj = " + Evaluation.calcObj(trainData, eta, z, NUM_BLOCKS));
 
 		return false;
 	}
@@ -135,7 +135,7 @@ public class UpdateBM
 			}
 		}
 
-		System.out.println("\tObj = " + Evaluation.calcObj(trainData, eta, z));
+		System.out.println("\tObj = " + Evaluation.calcObj(trainData, eta, z, NUM_BLOCKS));
 	}
 
 	

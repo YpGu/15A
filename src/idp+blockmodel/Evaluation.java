@@ -77,10 +77,8 @@ public class Evaluation
 
 	/// calculate the objective function (log-likelihood of the entire network) 
 	public static double
-	calcObj(SparseMatrix data, double[][] eta, Map<String, Integer> z) {
+	calcObj(SparseMatrix data, double[][] eta, Map<String, Integer> z, int NUM_BLOCKS) {
 //		long sTime = System.currentTimeMillis();
-
-		int NUM_BLOCKS = BlockModel.NUM_BLOCKS;
 
 		double[][] m = new double[NUM_BLOCKS][NUM_BLOCKS];
 

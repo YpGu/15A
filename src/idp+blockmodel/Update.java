@@ -12,30 +12,50 @@ public class Update
 		SparseMatrix data,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
 		Map<String, Integer> z, double[][] eta,
-		Map<String, Double> pi, Map<Tuple<String, String>, Double> gamma
+		Map<String, Double> pi, Map<String, Map<String, Double>> gamma
 	) {
 		for (String x: data.getDict()) {
-			int count = 0;
+			Map<String, Double> yMap = new HashMap<String, Double>();
+
 			Set<String> s1 = data.getRow(x);
 			for (String y: s1) {								// x -> y
-				Tuple<String, String> t = new Tuple<String, String>(x, y);
-				double p1 = eta[z.get(x)][z.get(y)];
-				double p2 = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
-				double deno = (1-pi.get(x)) * p1 + pi.get(x) * p2;
+//				if (x.equals("14412533") && y.equals("266830495")) {
+//					System.out.println("Doge");
+//				}
+//				Tuple<String, String> t = new Tuple<String, String>(x, y);
+				double p1 = (1-pi.get(x)) * eta[z.get(x)][z.get(y)];
+				double p2 = pi.get(x) * Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
+				double deno = p1 + p2;
 				double val = p2 / deno;
-				gamma.put(t, val);
-				count += 1;
+				yMap.put(y, val);
+//				gamma.put(t, val);
+
+/*
+				if (x.equals("14412533") && y.equals("266830495")) {
+					System.out.println("pi = " + pi.get(x) + " p1 = " + p1 + " p2 = " + p2 + " deno = " + deno);
+					System.out.println("val = " + val);
+					System.out.println("val = " + gamma.get(t));
+					Tuple<String, String> s = new Tuple<String, String>("14412533", "266830495");
+					System.out.println("val = " + gamma.get(s));
+					Tuple<String, String> u = new Tuple<String, String>(x, y);
+					System.out.println("val = " + gamma.get(u));
+				}
+*/
 			}
+
 			Set<String> s2 = data.getRowComplement(x);
 			for (String y: s2) {								// x !-> y
-				Tuple<String, String> t = new Tuple<String, String>(x, y);
+//				Tuple<String, String> t = new Tuple<String, String>(x, y);
 				double p1 = 1 - eta[z.get(x)][z.get(y)];
 				double p2 = 1 - Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				double deno = (1-pi.get(x)) * p1 + pi.get(x) * p2;
 				double val = p2 / deno;
-				gamma.put(t, val);
-				count += 1;
+				yMap.put(y, val);
+//				gamma.put(t, val);
 			}
+
+			gamma.put(x, yMap);
+
 /*
 			if (count != 2998) {
 				System.out.println("count = " + count + ", x = " + x);
@@ -46,6 +66,18 @@ public class Update
 			}
 */
 		}
+
+/*
+		if (data.getRow("14412533").contains("266830495")) {
+			System.out.println("positive");
+			Tuple<String, String> t = new Tuple<String, String>("14412533", "266830495");
+			// perhaps: the two keys (tuples) are different 
+			System.out.println("later val = " + gamma.get(t));
+		}
+		if (data.getRowComplement("14412533").contains("266830495")) {
+			System.out.println("negative");
+		}
+*/
 
 //		System.out.println("===================================");
 //		Tuple<String, String> t = new Tuple<String, String>("14412533", "331268118");
@@ -59,11 +91,20 @@ public class Update
 	public static void
 	updatePi(
 		SparseMatrix positiveData, SparseMatrix negativeData,
-		Map<String, Double> pi, Map<Tuple<String, String>, Double> gamma,
+		Map<String, Double> pi, Map<String, Map<String, Double>> gamma,
 		double c									// sample weight 
 	) {
 		Map<String, Double> piDeno = new HashMap<String, Double>();
 
+/*		int doge = 0;
+		for (Map.Entry<Tuple<String, String>, Double> e: gamma.entrySet()) { 
+			String x = e.getKey().getX();
+			if (x == "14412533") {
+				doge += 1;
+			}
+		}
+		System.out.println("doge = " + doge);
+*/
 		for (Map.Entry<String, Double> e: pi.entrySet()) {
 			String x = e.getKey();
 			pi.put(x, 0.0);
@@ -71,20 +112,29 @@ public class Update
 
 		for (String x: positiveData.getDict()) {
 			for (String y: positiveData.getRow(x)) {
-				Tuple<String, String> t = new Tuple<String, String>(x, y);
+//				if (x.equals("14412533")) {
+//					System.out.println("DOGE2");
+//				}
+
+//				Tuple<String, String> t = new Tuple<String, String>(x, y);
 				double v1 = pi.get(x);
 				try {
-					double v2 = gamma.get(t);
-					double val = pi.get(x) + gamma.get(t);
+					double v2 = gamma.get(x).get(y);
+					double val = pi.get(x) + v2;
 					pi.put(x, val);
-					piDeno.put(x, piDeno.get(x) + 1);
+					if (piDeno.get(x) == null) {
+						piDeno.put(x, 0.0);
+					}
+					else {
+						piDeno.put(x, piDeno.get(x) + 1);
+					}
 				}
 				catch (java.lang.NullPointerException e) {
-					System.out.println("t = " + t.getX() + " " + t.getY());
-					System.out.println("Size = " + positiveData.getRow(x).size());
-					System.out.println("Size = " + positiveData.getRowComplement(x).size());
-					System.out.println("Size = " + positiveData.getColumn(y).size());
-					System.out.println("Size = " + positiveData.getColumnComplement(y).size());
+					System.out.println("x = " + x + " y = " + y);
+			//		System.out.println("Size = " + positiveData.getRow(x).size());
+			//		System.out.println("Size = " + positiveData.getRowComplement(x).size());
+			//		System.out.println("Size = " + positiveData.getColumn(y).size());
+			//		System.out.println("Size = " + positiveData.getColumnComplement(y).size());
 					Scanner sc = new Scanner(System.in);
 					int gu = sc.nextInt();
 				}
@@ -92,20 +142,24 @@ public class Update
 		}
 		for (String x: negativeData.getDict()) {
 			for (String y: negativeData.getRow(x)) {
-				Tuple<String, String> t = new Tuple<String, String>(x, y);
-				double val = pi.get(x) + gamma.get(t) * c;
+//				Tuple<String, String> t = new Tuple<String, String>(x, y);
+				double val = pi.get(x) + gamma.get(x).get(y) * c;
 				pi.put(x, val);
 				piDeno.put(x, piDeno.get(x) + c);
 			}
 		}
 
 		for (String x: positiveData.getDict()) {
-			if (piDeno.get(x) != 0) {
-				double val = pi.get(x) / piDeno.get(x);
-				pi.put(x, val);
+			try {
+				if (piDeno.get(x) != 0) {
+					double val = pi.get(x) / piDeno.get(x);
+					pi.put(x, val);
+				}
+				else {
+					pi.put(x, 0.5);
+				}
 			}
-			else {
-				pi.put(x, 0.5);
+			catch (java.lang.NullPointerException e) {		// no outgoing neighbors 
 			}
 		}
 
@@ -122,7 +176,7 @@ public class Update
 		Map<String, Double> pi, 
 		double c, double reg, double lr
 	) {
-		Map<Tuple<String, String>, Double> gamma = new HashMap<Tuple<String, String>, Double>();
+		Map<String, Map<String, Double>> gamma = new HashMap<String, Map<String, Double>>();
 
 		System.out.println("E-Step: estimating gamma");
 		EStep(data, vOut, vIn, vBias, z, eta, pi, gamma);

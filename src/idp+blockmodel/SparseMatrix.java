@@ -103,19 +103,22 @@ public class SparseMatrix
 			String y = e.getKey().getY();
 			double v = e.getValue();
 
-			Set<String> ys = outNeighborSet.get(x);
-			ys.add(y);
-			outNeighborSet.put(x, ys);
+			if (x != y) {							// do not allow self circles
+				Set<String> ys = outNeighborSet.get(x);
+				ys.add(y);
+				outNeighborSet.put(x, ys);
 
-			Set<String> xs = inNeighborSet.get(y);
-			xs.add(x);
-			inNeighborSet.put(y, xs);
+				Set<String> xs = inNeighborSet.get(y);
+				xs.add(x);
+				inNeighborSet.put(y, xs);
+			}
 		}
 
 		// update non-neighbor set
 		for (String s: dict) {
 			Set<String> yd = new HashSet<String>();
 			Set<String> outNS = outNeighborSet.get(s);
+			int doge = 0, doge2 = 0;
 			for (String t: dict) {
 				if (!outNS.contains(t) && t != s) {
 					yd.add(t);
@@ -130,7 +133,7 @@ public class SparseMatrix
 					xd.add(t);
 				}
 			}
-			inNeighborComplementSet.put(s,xd);
+			inNeighborComplementSet.put(s, xd);
 		}
 	}
 }

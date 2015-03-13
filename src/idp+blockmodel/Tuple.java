@@ -19,5 +19,10 @@ public class Tuple<X,Y>
 	public Y getY() {
 		return _y;
 	}
+
+	public boolean
+	equals(Tuple<X,Y> t, Tuple<X,Y> s) {
+		return t.getX().equals(s.getX()) && t.getY().equals(s.getY());
+	}
 }
 

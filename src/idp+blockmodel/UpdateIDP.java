@@ -19,7 +19,7 @@ public class UpdateIDP
 	update(
 		SparseMatrix data, SparseMatrix nData,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
-		Map<String, Double> pi, Map<Tuple<String, String>, Double> gamma,			// gamma is the estimated weight before IDP mixture 
+		Map<String, Double> pi, Map<String, Map<String, Double>> gamma,			// gamma is the estimated weight before IDP mixture 
 		double c,										// sample weight 
 		double reg,										// regularization coefficient 
 		double lr										// learning rate 
@@ -32,8 +32,8 @@ public class UpdateIDP
 			Set<String> s1 = data.getRow(x);
 			for (String y: s1) {								// x -> y
 				double p = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
-				Tuple<String, String> t = new Tuple<String, String>(x, y);
-				double grad = gamma.get(t) * (1-p);
+//				Tuple<String, String> t = new Tuple<String, String>(x, y);
+				double grad = gamma.get(x).get(y) * (1-p);
 				gradOut.put(x, gradOut.get(x) + vIn.get(y) * grad);
 				gradIn.put(y, gradIn.get(y) + vOut.get(x) * grad);
 				gradBias.put(y, gradBias.get(y) + grad);
@@ -43,8 +43,8 @@ public class UpdateIDP
 			Set<String> s2 = nData.getRow(x);
 			for (String y: s2) {								// x !-> y
 				double p = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
-				Tuple<String, String> t = new Tuple<String, String>(x, y);
-				double grad = gamma.get(t) * (1-p);
+//				Tuple<String, String> t = new Tuple<String, String>(x, y);
+				double grad = gamma.get(x).get(y) * (1-p);
 				gradOut.put(x, gradOut.get(x) - vIn.get(y) * grad * c);
 				gradIn.put(y, gradIn.get(y) - vOut.get(x) * grad * c);
 				gradBias.put(y, gradBias.get(y) - grad * c);
