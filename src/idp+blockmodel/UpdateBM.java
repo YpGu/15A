@@ -90,13 +90,13 @@ public class UpdateBM
 //		System.out.println("Time = " + (fTime-sTime));
 
 		checkBlocks(z, NUM_BLOCKS);
-		System.out.println("\tObj = " + Evaluation.calcObj(trainData, eta, z, NUM_BLOCKS));
+//		System.out.println("\tObj = " + Evaluation.calcObj(trainData, eta, z, NUM_BLOCKS));
 
 		return false;
 	}
 
 
-	/// Hard BM step 2 - update mode parameters eta 
+	/// Hard BM step 2 - update model parameters eta 
 	public static void 
 	updateParamHard(SparseMatrix trainData, Map<String, Integer> z, double[][] eta) {
 
@@ -127,7 +127,8 @@ public class UpdateBM
 					pb -= counter[i];
 				}
 				if (pb != 0) {
-					eta[i][j] = (m[i][j]+1)/(pb+2);
+				//	eta[i][j] = (m[i][j]+1)/(pb+2);
+					eta[i][j] = m[i][j]/pb;
 				}
 				else {
 					eta[i][j] = 0;
@@ -135,7 +136,7 @@ public class UpdateBM
 			}
 		}
 
-		System.out.println("\tObj = " + Evaluation.calcObj(trainData, eta, z, NUM_BLOCKS));
+//		System.out.println("\tObj = " + Evaluation.calcObj(trainData, eta, z, NUM_BLOCKS));
 	}
 
 	

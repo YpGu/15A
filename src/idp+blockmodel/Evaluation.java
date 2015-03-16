@@ -140,6 +140,13 @@ public class Evaluation
 				double p1 = eta[zx][zy];
 				double p2 = logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				res += Math.log( (1-pi.get(x)) * p1 + pi.get(y) * p2 + Double.MIN_VALUE );
+
+				if (pi.get(x) > 1 || pi.get(x) < 0) {
+					System.out.println("pi error");
+				}
+				if (pi.get(y) > 1 || pi.get(y) < 0) {
+					System.out.println("pi error");
+				}
 			}
 		}
 		for (String x: nData.getDict()) {

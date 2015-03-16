@@ -19,69 +19,24 @@ public class Update
 
 			Set<String> s1 = data.getRow(x);
 			for (String y: s1) {								// x -> y
-//				if (x.equals("14412533") && y.equals("266830495")) {
-//					System.out.println("Doge");
-//				}
-//				Tuple<String, String> t = new Tuple<String, String>(x, y);
 				double p1 = (1-pi.get(x)) * eta[z.get(x)][z.get(y)];
 				double p2 = pi.get(x) * Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				double deno = p1 + p2;
 				double val = p2 / deno;
 				yMap.put(y, val);
-//				gamma.put(t, val);
-
-/*
-				if (x.equals("14412533") && y.equals("266830495")) {
-					System.out.println("pi = " + pi.get(x) + " p1 = " + p1 + " p2 = " + p2 + " deno = " + deno);
-					System.out.println("val = " + val);
-					System.out.println("val = " + gamma.get(t));
-					Tuple<String, String> s = new Tuple<String, String>("14412533", "266830495");
-					System.out.println("val = " + gamma.get(s));
-					Tuple<String, String> u = new Tuple<String, String>(x, y);
-					System.out.println("val = " + gamma.get(u));
-				}
-*/
 			}
 
 			Set<String> s2 = data.getRowComplement(x);
 			for (String y: s2) {								// x !-> y
-//				Tuple<String, String> t = new Tuple<String, String>(x, y);
 				double p1 = 1 - eta[z.get(x)][z.get(y)];
 				double p2 = 1 - Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				double deno = (1-pi.get(x)) * p1 + pi.get(x) * p2;
 				double val = p2 / deno;
 				yMap.put(y, val);
-//				gamma.put(t, val);
 			}
 
 			gamma.put(x, yMap);
-
-/*
-			if (count != 2998) {
-				System.out.println("count = " + count + ", x = " + x);
-				Tuple<String, String> t = new Tuple<String, String>(x,x);
-				System.out.println("val = " + gamma.get(t));
-				Scanner sc = new Scanner(System.in);
-				int gu = sc.nextInt();
-			}
-*/
 		}
-
-/*
-		if (data.getRow("14412533").contains("266830495")) {
-			System.out.println("positive");
-			Tuple<String, String> t = new Tuple<String, String>("14412533", "266830495");
-			// perhaps: the two keys (tuples) are different 
-			System.out.println("later val = " + gamma.get(t));
-		}
-		if (data.getRowComplement("14412533").contains("266830495")) {
-			System.out.println("negative");
-		}
-*/
-
-//		System.out.println("===================================");
-//		Tuple<String, String> t = new Tuple<String, String>("14412533", "331268118");
-//		System.out.println("value = " + gamma.get(t));
 
 		return;
 	}
@@ -95,16 +50,6 @@ public class Update
 		double c									// sample weight 
 	) {
 		Map<String, Double> piDeno = new HashMap<String, Double>();
-
-/*		int doge = 0;
-		for (Map.Entry<Tuple<String, String>, Double> e: gamma.entrySet()) { 
-			String x = e.getKey().getX();
-			if (x == "14412533") {
-				doge += 1;
-			}
-		}
-		System.out.println("doge = " + doge);
-*/
 		for (Map.Entry<String, Double> e: pi.entrySet()) {
 			String x = e.getKey();
 			pi.put(x, 0.0);
@@ -112,37 +57,18 @@ public class Update
 
 		for (String x: positiveData.getDict()) {
 			for (String y: positiveData.getRow(x)) {
-//				if (x.equals("14412533")) {
-//					System.out.println("DOGE2");
-//				}
-
-//				Tuple<String, String> t = new Tuple<String, String>(x, y);
-				double v1 = pi.get(x);
+				double val = pi.get(x) + gamma.get(x).get(y);
+				pi.put(x, val);
 				try {
-					double v2 = gamma.get(x).get(y);
-					double val = pi.get(x) + v2;
-					pi.put(x, val);
-					if (piDeno.get(x) == null) {
-						piDeno.put(x, 0.0);
-					}
-					else {
-						piDeno.put(x, piDeno.get(x) + 1);
-					}
+					piDeno.put(x, piDeno.get(x) + 1);
 				}
 				catch (java.lang.NullPointerException e) {
-					System.out.println("x = " + x + " y = " + y);
-			//		System.out.println("Size = " + positiveData.getRow(x).size());
-			//		System.out.println("Size = " + positiveData.getRowComplement(x).size());
-			//		System.out.println("Size = " + positiveData.getColumn(y).size());
-			//		System.out.println("Size = " + positiveData.getColumnComplement(y).size());
-					Scanner sc = new Scanner(System.in);
-					int gu = sc.nextInt();
+					piDeno.put(x, 1.0);
 				}
 			}
 		}
 		for (String x: negativeData.getDict()) {
 			for (String y: negativeData.getRow(x)) {
-//				Tuple<String, String> t = new Tuple<String, String>(x, y);
 				double val = pi.get(x) + gamma.get(x).get(y) * c;
 				pi.put(x, val);
 				piDeno.put(x, piDeno.get(x) + c);
@@ -178,20 +104,21 @@ public class Update
 	) {
 		Map<String, Map<String, Double>> gamma = new HashMap<String, Map<String, Double>>();
 
-		System.out.println("E-Step: estimating gamma");
+		System.out.println("\tE-Step: estimating gamma");
 		EStep(data, vOut, vIn, vBias, z, eta, pi, gamma);
 
-		System.out.println("Size of gamma = " + gamma.size());
-
-		System.out.println("Updating Pi");
+		System.out.println("\tUpdating Pi");
 		updatePi(data, nData, pi, gamma, c);
 
-		System.out.println("Updating IDP parameters");
+		System.out.println("\tUpdating IDP parameters");
 		UpdateIDP.update(data, nData, vOut, vIn, vBias, pi, gamma, c, reg, lr);
 
-		System.out.println("Updating BM parameters");
+		System.out.println("\tUpdating BM parameters");
 		boolean res = UpdateBM.updateHard(data, z, eta);
-		// todo: check correctness 
+
+		// check objective function 
+		double obj = Evaluation.calcObj(data, nData, eta, z, vOut, vIn, vBias, pi, c, reg);
+		System.out.println("Objective function = " + obj);
 
 		return res;
 	}

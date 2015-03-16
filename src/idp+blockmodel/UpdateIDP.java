@@ -34,9 +34,24 @@ public class UpdateIDP
 				double p = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 //				Tuple<String, String> t = new Tuple<String, String>(x, y);
 				double grad = gamma.get(x).get(y) * (1-p);
-				gradOut.put(x, gradOut.get(x) + vIn.get(y) * grad);
-				gradIn.put(y, gradIn.get(y) + vOut.get(x) * grad);
-				gradBias.put(y, gradBias.get(y) + grad);
+				try {
+					gradOut.put(x, gradOut.get(x) + vIn.get(y) * grad);
+				}
+				catch (java.lang.NullPointerException e) {
+					gradOut.put(x, vIn.get(y) * grad);
+				}
+				try {
+					gradIn.put(y, gradIn.get(y) + vOut.get(x) * grad);
+				}
+				catch (java.lang.NullPointerException e) {
+					gradIn.put(y, vOut.get(x) * grad);
+				}
+				try {
+					gradBias.put(y, gradBias.get(y) + grad);
+				}
+				catch (java.lang.NullPointerException e) {
+					gradBias.put(y, grad);
+				}
 			}
 		}
 		for (String x: data.getDict()) {
@@ -45,16 +60,35 @@ public class UpdateIDP
 				double p = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 //				Tuple<String, String> t = new Tuple<String, String>(x, y);
 				double grad = gamma.get(x).get(y) * (1-p);
-				gradOut.put(x, gradOut.get(x) - vIn.get(y) * grad * c);
-				gradIn.put(y, gradIn.get(y) - vOut.get(x) * grad * c);
-				gradBias.put(y, gradBias.get(y) - grad * c);
+				try {
+					gradOut.put(x, gradOut.get(x) - vIn.get(y) * grad * c);
+				}
+                                catch (java.lang.NullPointerException e) {
+					gradOut.put(x, -vIn.get(y) * grad * c);
+				}
+				try {
+					gradIn.put(y, gradIn.get(y) - vOut.get(x) * grad * c);
+				}
+                                catch (java.lang.NullPointerException e) {
+					gradIn.put(y, -vOut.get(x) * grad * c);
+				}
+				try {
+					gradBias.put(y, gradBias.get(y) - grad * c);
+				}
+                                catch (java.lang.NullPointerException e) {
+					gradBias.put(y, -grad * c);
+				}
 			}
 		}
 
 		// regularizations
 		for (String x: data.getDict()) {
-			gradOut.put(x, gradOut.get(x) - reg * vOut.get(x));
-			gradIn.put(x, gradIn.get(x) - reg * vIn.get(x));
+			try {
+				gradOut.put(x, gradOut.get(x) - reg * vOut.get(x));
+				gradIn.put(x, gradIn.get(x) - reg * vIn.get(x));
+			}
+			catch (java.lang.NullPointerException e) {
+			}
 		}
 
 /*		// line search
@@ -76,9 +110,13 @@ public class UpdateIDP
 		while (newObj <= oldObj && lsIter < 10 && numIter > 0);
 */
 		for (String x: data.getDict()) {
-			vOut.put(x, vOut.get(x) + lr * gradOut.get(x));
-			vIn.put(x, vIn.get(x) + lr * gradIn.get(x));
-			vBias.put(x, vBias.get(x) + lr * gradBias.get(x));
+			try {
+				vOut.put(x, vOut.get(x) + lr * gradOut.get(x));
+				vIn.put(x, vIn.get(x) + lr * gradIn.get(x));
+				vBias.put(x, vBias.get(x) + lr * gradBias.get(x));
+			}
+			catch (java.lang.NullPointerException e) {
+			}
 		}
 
 		return;
