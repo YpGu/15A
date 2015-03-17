@@ -68,11 +68,9 @@ public class UpdateBM
 		Map<String, Map<String, Double>> gamma,
 		double sw
 	) {
-
+//		long sTime = System.currentTimeMillis();
 		int NUM_BLOCKS = eta.length;
 		boolean flag = true;						// convergence checker 
-
-		long sTime = System.currentTimeMillis();
 
 		for (String s: posData.getDict()) {
 			int bestK = z.get(s), preK = z.get(s);
@@ -80,7 +78,6 @@ public class UpdateBM
 			double maxObj = -Double.MAX_VALUE, curObj;
 
 			for (int k = 0; k < NUM_BLOCKS; k++) {
-				// use change in obj
 				if (k != preK) {
 					curChange = Evaluation.changeInObj(posData, eta, gamma, z, s, k, sw);
 //					curChange = Evaluation.changeInObj(posData, eta, z, s, k);
@@ -99,7 +96,7 @@ public class UpdateBM
 			return true;
 		}
 
-		long fTime = System.currentTimeMillis();
+//		long fTime = System.currentTimeMillis();
 //		System.out.println("Time = " + (fTime-sTime));
 
 		if (!checkBlocks(z, NUM_BLOCKS)) {
@@ -152,7 +149,6 @@ public class UpdateBM
 			for (int j = 0; j < NUM_BLOCKS; j++) {
 				if (m[i][j] + mBar[i][j] != 0) {
 					eta[i][j] = (m[i][j]+1)/(m[i][j]+mBar[i][j]+2);
-				//	eta[i][j] = m[i][j]/(m[i][j]+mBar[i][j]);
 				}
 				else {
 					eta[i][j] = 0;
@@ -199,7 +195,6 @@ public class UpdateBM
 			for (int j = 0; j < NUM_BLOCKS; j++) {
 				if (m[i][j] + mBar[i][j] != 0) {
 					eta[i][j] = (m[i][j]+1)/(m[i][j]+mBar[i][j]+2);
-				//	eta[i][j] = m[i][j]/(m[i][j]+mBar[i][j]);
 				}
 				else {
 					eta[i][j] = 0;
@@ -213,14 +208,13 @@ public class UpdateBM
 	
 	/// Hard BM update: merge step 1 and 2 together 
 	public static boolean
-//	updateHard(SparseMatrix posData, SparseMatrix negData, Map<String, Integer> z, double[][] eta, Map<String, Map<String, Double>> gamma, double sw) {
 	updateHard(SparseMatrix posData, SparseMatrix negData, Map<String, Integer> z, double[][] eta, Map<String, Map<String, Double>> gamma, double sw,
-			Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias, Map<String, Double> pi, double reg) {
+			Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias, Map<String, Double> pi, double reg, boolean calc) {
 		boolean res = updateLatentHard(posData, negData, z, eta, gamma, sw);
-
-		double obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
-		System.out.println("\t\tObjective function (after optimizing z) = " + obj);
-
+		if (calc) {
+			double obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+			System.out.println("\t\tObjective function (after optimizing z) = " + obj);
+		}
 		updateParamHard(posData, negData, z, eta, gamma, sw);
 		return res;
 	}

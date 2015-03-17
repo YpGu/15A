@@ -48,43 +48,23 @@ public class FileParser
 		return;
 	}
 
-
-
 	/// write to file
 	public static void
-	output(
-		String fileDir,
-		double[] arr
-	) {
-		File f = new File(fileDir);
-		if (f.exists() && !f.isDirectory()) {
-			f.delete();
-		}
-
+	output(String fileDir, Map<String, ?> arr) {
 		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileDir)))) {
-			for (int i = 0; i < arr.length; i++) {
-				writer.printf("%f\n", arr[i]);
+			for (Map.Entry<String, ?> e: arr.entrySet()) {
+				if (e.getValue() instanceof Double) {
+					writer.printf("%s\t%f\n", e.getKey(), e.getValue());
+				}
+				else if (e.getValue() instanceof Integer) {
+					writer.printf("%s\t%d\n", e.getKey(), e.getValue());
+				}
 			}
 		}
 		catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
-
-	/// write to file
-	public static void
-	output(String fileDir, Map<String, Integer> arr) {
-		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileDir)))) {
-			for (Map.Entry<String, Integer> e: arr.entrySet()) {
-				writer.printf("%s\t%d\n", e.getKey(), e.getValue());
-			}
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 
 	/// write two-dimension array to file 
 	public static void

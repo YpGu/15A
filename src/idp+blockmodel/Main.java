@@ -15,8 +15,8 @@ import java.util.*;
 public class Main
 {
 	public static int NUM_BLOCKS;							// Number of Blocks (pre-defined) 
-	public final static int MAX_ITER = 30;						// Maximum number of iterations until convergence 
-	public final static int NUM_INITS = 5;						// init the configuration multiple times, and keep the one with largest likelihood 
+	public final static int MAX_ITER = 100;						// Maximum number of iterations until convergence 
+	public final static int NUM_INITS = 1;						// init the configuration multiple times, and keep the one with largest likelihood 
 	public final static boolean WRITE = true;					// whether save to file
 
 	public static double sw;							// sample weight or 1 
@@ -112,12 +112,21 @@ public class Main
 	}
 
 
+	/// save to file
+	public static void 
+	writeToFile() {
+		FileParser.output("./res/z_" + NUM_BLOCKS, optZ);
+		FileParser.output("./res/eta_" + NUM_BLOCKS, optEta);
+		FileParser.output("./res/pi_" + NUM_BLOCKS, optPi);
+	}
+
+
 	/// estimate parameters using two-step EM-like algorithm 
 	public static double
 	train() {
 		double preObj = -1, curObj;
 		for (int iter = 0; iter < MAX_ITER; iter++) {
-			System.out.println("\n\t---- Iter = " + iter + " ----");
+			System.out.println("\n\t---- Iter = " + iter + "/" + MAX_ITER + " ----");
 			double lr = 0.0001;
 //			if (Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr)) {
 //				break;
@@ -125,6 +134,7 @@ public class Main
 			curObj = Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr);
 			if (iter != 0) {
 				double rate = Math.abs((curObj-preObj)/preObj);
+				System.out.println("\tObjective function = " + curObj + " rate = " + rate);
 				if (rate < Math.pow(10,-6)) {
 					break;
 				}
@@ -133,7 +143,7 @@ public class Main
 		}
 
 		// output z
-		System.out.println("    Final Block Assignments:");
+		System.out.println("\tFinal Block Assignments:");
 		UpdateBM.checkBlocks(z, NUM_BLOCKS);
 
 		return Evaluation.calcObj(trainPositiveData, trainNegativeData, eta, z, vOut, vIn, vBias, pi, sw, reg);
@@ -152,7 +162,7 @@ public class Main
 		double maxObj = -Double.MAX_VALUE, curObj;
 		int init = 1;
 		while (true) {
-			System.out.println("\n------ Initialization #" + init + " ------");
+			System.out.println("\n------ Initialization #" + init + "/" + NUM_INITS + " ------");
 			init(args, init);
 			curObj = train();
 			System.out.println("Objective function = " + curObj);
@@ -173,11 +183,13 @@ public class Main
 		UpdateBM.checkBlocks(optZ, NUM_BLOCKS);
 
 		if (WRITE) {
-			FileParser.output("./res/z_"+NUM_BLOCKS, optZ);
-			FileParser.output("./res/eta_"+NUM_BLOCKS, optEta);
+			writeToFile();
 		}
 
+		System.out.println("\n------ Evaluation ------");
+		System.out.println("\t------ Training ------");
 		Evaluation.auroc(trainPositiveData, trainNegativeData, optPi, optZ, optEta, optOut, optIn, optBias);
+		System.out.println("\t------ Testing ------");
 		Evaluation.auroc(testPositiveData, testNegativeData, optPi, optZ, optEta, optOut, optIn, optBias);
 
 		return;

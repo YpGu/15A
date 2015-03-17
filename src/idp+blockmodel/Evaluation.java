@@ -29,7 +29,7 @@ public class Evaluation
 		int newClassLabelForX,
 		double sw
 	) {
-		long sTime = System.currentTimeMillis();
+//		long sTime = System.currentTimeMillis();
 
 		if (newClassLabelForX < 0 || newClassLabelForX >= eta.length) {
 			throw new ArrayIndexOutOfBoundsException();
@@ -80,7 +80,7 @@ public class Evaluation
 				res += gamma1 * Math.log(1 - eta[curY][curX] + Double.MIN_VALUE);
 		}
 
-		long fTime = System.currentTimeMillis();
+//		long fTime = System.currentTimeMillis();
 //		System.out.println("Time: " + (fTime-sTime));
 
 		return res;
@@ -97,7 +97,7 @@ public class Evaluation
 		double reg										// regularization coefficient 
 	) {
 		// log likelihood
-		long sTime = System.currentTimeMillis();
+//		long sTime = System.currentTimeMillis();
 		double res = 0;
 		for (String x: posData.getDict()) {
 			Set<String> s1 = posData.getRow(x);
@@ -107,13 +107,6 @@ public class Evaluation
 				double p1 = eta[zx][zy];
 				double p2 = logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				res += Math.log( (1-pi.get(x)) * p1 + pi.get(x) * p2 + Double.MIN_VALUE );
-
-				if (pi.get(x) > 1 || pi.get(x) < 0) {
-					System.out.println("pi error");
-				}
-				if (pi.get(y) > 1 || pi.get(y) < 0) {
-					System.out.println("pi error");
-				}
 			}
 			Set<String> s2 = posData.getRowComplement(x);
 			for (String y: s2) {								// x !-> y
@@ -122,13 +115,6 @@ public class Evaluation
 				double p1 = 1 - eta[zx][zy];
 				double p2 = 1 - logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				res += Math.log( (1-pi.get(x)) * p1 + pi.get(x) * p2 + Double.MIN_VALUE );
-
-				if (pi.get(x) > 1 || pi.get(x) < 0) {
-					System.out.println("pi error");
-				}
-				if (pi.get(y) > 1 || pi.get(y) < 0) {
-					System.out.println("pi error");
-				}
 			}
 		}
 /*		for (String x: negData.getDict()) {
@@ -163,14 +149,14 @@ public class Evaluation
 			Scanner myInput = new Scanner(System.in);
 			int s = myInput.nextInt();
 		}
-		long fTime = System.currentTimeMillis();
-		System.out.println("time = " + (fTime-sTime));
-		
+//		long fTime = System.currentTimeMillis();
+//		System.out.println("\t\tTime = " + (fTime-sTime) + " ms");
+	
 		return res;
 	}
 
 
-	// auroc  (TODO) 
+	// auroc 
 	public static void 
 	auroc(
 		SparseMatrix posData, SparseMatrix negData,
@@ -209,13 +195,12 @@ public class Evaluation
 		}
 
 		double posSamples = posGroundTruth.size();
-		System.out.println("Size of +'s = " + posSamples);
 		double negSamples = negGroundTruth.size();
-		System.out.println("Size of -'s = " + negSamples);
+		System.out.println("\tSize of +'s = " + posSamples + "  Size of -'s = " + negSamples);
 
 		// calculate AUC
 		Map<Integer, Double> sortedProbs = ArrayTools.ValueComparator.sortByValue(recProbs);
-		System.out.println("sortedProbs size = " + sortedProbs.size());
+		System.out.println("\tsortedProbs size = " + sortedProbs.size());
 		double newX = 0, newY = 0, oldX = 0, oldY = 0;
 		double upperAUC = 0, lowerAUC = 0;
 		for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
@@ -238,8 +223,8 @@ public class Evaluation
 			oldY = newY;
 		}
 
-		System.out.println("AUC between " + lowerAUC + " and " + upperAUC);
-		System.out.println("newY = " + newY + " newX = " + newX);
+		System.out.println("\tAUC between " + lowerAUC + " and " + upperAUC);
+		System.out.println("\tnewY = " + newY + " newX = " + newX);
 
 		return;
 	}

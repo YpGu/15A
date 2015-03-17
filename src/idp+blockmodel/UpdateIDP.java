@@ -53,9 +53,9 @@ public class UpdateIDP
 				}
 			}
 		}
+		double cc = 1.0;
 //		for (String x: data.getDict()) {
 //			Set<String> s2 = nData.getRow(x);
-		double cc = 1.0;
 		for (String x: data.getDict()) {
 			Set<String> s2 = data.getRowComplement(x);
 			for (String y: s2) {								// x !-> y

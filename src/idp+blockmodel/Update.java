@@ -106,6 +106,7 @@ public class Update
 		Map<String, Double> pi, 
 		double sw, double reg, double lr
 	) {
+		boolean calc = false;
 		double obj;
 		Map<String, Map<String, Double>> gamma = new HashMap<String, Map<String, Double>>();
 
@@ -114,23 +115,27 @@ public class Update
 
 		System.out.println("\tUpdating Pi");
 		updatePi(posData, negData, pi, gamma, sw);
-		obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
-		System.out.println("\t\tObjective function = " + obj);
+		if (calc) {
+			obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+			System.out.println("\t\tObjective function = " + obj);
+		}
 
 		System.out.println("\tUpdating IDP parameters");
 		UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
-		obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
-		System.out.println("\t\tObjective function = " + obj);
+		if (calc) {
+			obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+			System.out.println("\t\tObjective function = " + obj);
+		}
 
 		System.out.println("\tUpdating BM parameters");
-//		boolean res = UpdateBM.updateHard(posData, negData, z, eta, gamma, sw);
-		boolean res = UpdateBM.updateHard(posData, negData, z, eta, gamma, sw, vOut, vIn, vBias, pi, reg);
+		boolean res = UpdateBM.updateHard(posData, negData, z, eta, gamma, sw, vOut, vIn, vBias, pi, reg, calc);
 
-		// check objective function 
-		obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
-		System.out.println("\t\tObjective function = " + obj);
+		if (calc) {
+			obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+			System.out.println("\t\tObjective function (after updating \\eta) = " + obj);
+		}
 
 //		return res;
-		return obj;
+		return Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
 	}
 }
