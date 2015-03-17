@@ -7,12 +7,12 @@ import java.io.*;
 
 public class SparseMatrix
 {
-	private static Map<Tuple<String, String>, Double> mat;
-	private static Set<String> dict;
-	private static Map<String, Set<String>> outNeighborSet;
-	private static Map<String, Set<String>> inNeighborSet;
-	private static Map<String, Set<String>> outNeighborComplementSet;		// will not contain x itself 
-	private static Map<String, Set<String>> inNeighborComplementSet;
+	private Map<Tuple<String, String>, Double> mat;
+	private Set<String> dict;
+	private Map<String, Set<String>> outNeighborSet;
+	private Map<String, Set<String>> inNeighborSet;
+	private Map<String, Set<String>> outNeighborComplementSet;		// will not contain x itself 
+	private Map<String, Set<String>> inNeighborComplementSet;
 
 	public SparseMatrix() {
 		mat = new HashMap<Tuple<String, String>, Double>();
@@ -23,17 +23,17 @@ public class SparseMatrix
 		inNeighborComplementSet = new HashMap<String, Set<String>>();
 	}
 
-	public static Map<Tuple<String, String>, Double>
+	public Map<Tuple<String, String>, Double>
 	getMat() {
 		return mat;
 	}
 
-	public static Set<String>
+	public Set<String>
 	getDict() {
 		return dict;
 	}
 
-	public static double 
+	public double 
 	get(String row, String col) {
 		Tuple<String, String> t = new Tuple<String, String>(row, col);
 		try {
@@ -45,49 +45,49 @@ public class SparseMatrix
 		}
 	}
 
-	public static void 
+	public void 
 	set(String row, String col, double val) {
 		Tuple<String, String> t = new Tuple<String, String>(row, col);
 		mat.put(t, val);
 		return;
 	}
 
-	public static Set<String> 
+	public Set<String> 
 	getRow(String row) {
 		return outNeighborSet.get(row);
 	}
 
-	public static Set<String> 
+	public Set<String> 
 	getColumn(String col) {
 		return inNeighborSet.get(col);
 	}
 
-	public static Set<String> 
+	public Set<String> 
 	getRowComplement(String row) {
 		return outNeighborComplementSet.get(row);
 	}
 
-	public static Set<String> 
+	public Set<String> 
 	getColumnComplement(String col) {
 		return inNeighborComplementSet.get(col);
 	}
 
-	public static int
+	public int
 	getSize() {
 		return mat.size();
 	}
 
-	public static int
+	public int
 	getDictSize() {
 		return dict.size();
 	}
 
-	public static void
+	public void
 	addToDict(String s) {
 		dict.add(s);
 	}
 
-	public static void 
+	public void 
 	update() {
 		// init neighbor set
 		for (String s: dict) {

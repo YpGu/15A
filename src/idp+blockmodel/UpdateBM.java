@@ -219,7 +219,7 @@ public class UpdateBM
 		boolean res = updateLatentHard(posData, negData, z, eta, gamma, sw);
 
 		double obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
-		System.out.println("\t--Objective function = " + obj);
+		System.out.println("\t\tObjective function (after optimizing z) = " + obj);
 
 		updateParamHard(posData, negData, z, eta, gamma, sw);
 		return res;

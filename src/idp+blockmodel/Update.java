@@ -97,7 +97,8 @@ public class Update
 
 
 	/// update method for the unified model 
-	public static boolean
+//	public static boolean
+	public static double
 	update(
 		SparseMatrix posData, SparseMatrix negData, 
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias, 
@@ -114,12 +115,12 @@ public class Update
 		System.out.println("\tUpdating Pi");
 		updatePi(posData, negData, pi, gamma, sw);
 		obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
-		System.out.println("\tObjective function = " + obj);
+		System.out.println("\t\tObjective function = " + obj);
 
 		System.out.println("\tUpdating IDP parameters");
 		UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
 		obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
-		System.out.println("\tObjective function = " + obj);
+		System.out.println("\t\tObjective function = " + obj);
 
 		System.out.println("\tUpdating BM parameters");
 //		boolean res = UpdateBM.updateHard(posData, negData, z, eta, gamma, sw);
@@ -127,8 +128,9 @@ public class Update
 
 		// check objective function 
 		obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
-		System.out.println("\tObjective function = " + obj);
+		System.out.println("\t\tObjective function = " + obj);
 
-		return res;
+//		return res;
+		return obj;
 	}
 }

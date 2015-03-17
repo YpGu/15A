@@ -18,7 +18,11 @@ public class ArrayTools
 		{
 			V valueA = map.get(keyA);
 			Comparable<V> valueB = map.get(keyB);
-			return valueB.compareTo(valueA);		// sort descending
+			if (valueB.equals(valueA))
+				return 1;					// otherwise keys with same value will be merged
+			//	return keyB.compareTo(keyA);			// otherwise keys with same value will be merged
+			else
+				return valueB.compareTo(valueA);		// sort descending
 		}
 
 		public static <K, V extends Comparable<V>> Map<K, V> sortByValue(Map<K, V> unsortedMap)

@@ -1,11 +1,13 @@
 /**
-	Implementation of the model in Discovering Latent Classes in Relational Data (Kemp 2004);
+	First we implement the model in Discovering Latent Classes in Relational Data (Kemp 2004);
 	Every node has a hard class label and the probability that two nodes link depends solely on the blocks they belong to;
 	Here we do not use sampling to update parameters; instead we use EM;
+	Then we combine the blockmodel with ideal point model;
+	The individual \pi value is also trained by EM;
 
+	Note:
 	Time complexity may probably be an issue when the number of nodes is big;
-
-	Todo: dictionary of the training data and all.
+	Learning rate should be set manually;
 **/
 
 import java.util.*;
@@ -15,7 +17,7 @@ public class Main
 	public static int NUM_BLOCKS;							// Number of Blocks (pre-defined) 
 	public final static int MAX_ITER = 30;						// Maximum number of iterations until convergence 
 	public final static int NUM_INITS = 5;						// init the configuration multiple times, and keep the one with largest likelihood 
-	public final static boolean WRITE = true;
+	public final static boolean WRITE = true;					// whether save to file
 
 	public static double sw;							// sample weight or 1 
 	public static double reg;							// regularization coefficient 
@@ -64,18 +66,8 @@ public class Main
 		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".train", trainPositiveData);
 		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".train", trainNegativeData);
 		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".test", testPositiveData);
-		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".test", trainNegativeData);
+		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".test", testNegativeData);
 
-/*
-		for (String x: trainPositiveData.getDict()) {
-			System.out.println(x);
-			System.out.println(trainPositiveData.getRow(x).size());
-			System.out.println(trainNegativeData.getRow(x).size());
-
-			Scanner sc = new Scanner(System.in);
-			int gu = sc.nextInt();
-		}
-*/
 		// sample weight 
 		sw = (double)trainPositiveData.getDictSize() * (trainPositiveData.getDictSize()-1) / (double)trainPositiveData.getSize() - 1;
 //		sw = 1;
@@ -123,12 +115,21 @@ public class Main
 	/// estimate parameters using two-step EM-like algorithm 
 	public static double
 	train() {
+		double preObj = -1, curObj;
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("\n\t---- Iter = " + iter + " ----");
-			double lr = 0.00001;
-			if (Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr)) {
-				break;
+			double lr = 0.0001;
+//			if (Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr)) {
+//				break;
+//			}
+			curObj = Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr);
+			if (iter != 0) {
+				double rate = Math.abs((curObj-preObj)/preObj);
+				if (rate < Math.pow(10,-6)) {
+					break;
+				}
 			}
+			preObj = curObj;
 		}
 
 		// output z
@@ -136,7 +137,6 @@ public class Main
 		UpdateBM.checkBlocks(z, NUM_BLOCKS);
 
 		return Evaluation.calcObj(trainPositiveData, trainNegativeData, eta, z, vOut, vIn, vBias, pi, sw, reg);
-//		return 1;
 	}
 
 
@@ -177,7 +177,8 @@ public class Main
 			FileParser.output("./res/eta_"+NUM_BLOCKS, optEta);
 		}
 
-		Evaluation.auroc(trainPositiveData, optPi, optZ, optEta, optOut, optIn, optBias);
+		Evaluation.auroc(trainPositiveData, trainNegativeData, optPi, optZ, optEta, optOut, optIn, optBias);
+		Evaluation.auroc(testPositiveData, testNegativeData, optPi, optZ, optEta, optOut, optIn, optBias);
 
 		return;
 	}

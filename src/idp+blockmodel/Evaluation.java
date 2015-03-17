@@ -97,6 +97,7 @@ public class Evaluation
 		double reg										// regularization coefficient 
 	) {
 		// log likelihood
+		long sTime = System.currentTimeMillis();
 		double res = 0;
 		for (String x: posData.getDict()) {
 			Set<String> s1 = posData.getRow(x);
@@ -162,6 +163,8 @@ public class Evaluation
 			Scanner myInput = new Scanner(System.in);
 			int s = myInput.nextInt();
 		}
+		long fTime = System.currentTimeMillis();
+		System.out.println("time = " + (fTime-sTime));
 		
 		return res;
 	}
@@ -170,7 +173,7 @@ public class Evaluation
 	// auroc  (TODO) 
 	public static void 
 	auroc(
-		SparseMatrix posData,
+		SparseMatrix posData, SparseMatrix negData,
 		Map<String, Double> pi,
 		Map<String, Integer> z, double[][] eta,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias
@@ -178,7 +181,6 @@ public class Evaluation
 		Map<Integer, Double> recProbs = new HashMap<Integer, Double>();
 		Set<Integer> posGroundTruth = new HashSet<Integer>();
 		Set<Integer> negGroundTruth = new HashSet<Integer>();
-//		Map<Integer, Boolean> negGroundTruth = new HashMap<Integer, Boolean>();
 
 		int tupleID = 0;
 		for (String x: posData.getDict()) {
@@ -192,7 +194,9 @@ public class Evaluation
 				posGroundTruth.add(tupleID);
 				tupleID += 1;
 			}
-			Set<String> s2 = posData.getRowComplement(x);
+		}
+		for (String x: negData.getDict()) {
+			Set<String> s2 = negData.getRow(x);
 			for (String y: s2) {
 				int zx = z.get(x), zy = z.get(y);
 				double p1 = eta[zx][zy];
@@ -211,11 +215,16 @@ public class Evaluation
 
 		// calculate AUC
 		Map<Integer, Double> sortedProbs = ArrayTools.ValueComparator.sortByValue(recProbs);
+		System.out.println("sortedProbs size = " + sortedProbs.size());
 		double newX = 0, newY = 0, oldX = 0, oldY = 0;
 		double upperAUC = 0, lowerAUC = 0;
-		for (Map.Entry<Integer, Double> e: sortedProbs.entrySet())
-		{
+		for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
 			int curKey = e.getKey();
+
+//			System.out.println(e.getValue());
+//			Scanner sc = new Scanner(System.in);
+//			int gu = sc.nextInt();
+
 			if (posGroundTruth.contains(curKey)) {
 				newY += 1.0/posSamples;
 			}
