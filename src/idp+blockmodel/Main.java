@@ -15,7 +15,7 @@ public class Main
 	public static int NUM_BLOCKS;							// Number of Blocks (pre-defined) 
 	public final static int MAX_ITER = 30;						// Maximum number of iterations until convergence 
 	public final static int NUM_INITS = 5;						// init the configuration multiple times, and keep the one with largest likelihood 
-	public final static boolean WRITE = false;
+	public final static boolean WRITE = true;
 
 	public static double sw;							// sample weight or 1 
 	public static double reg;							// regularization coefficient 
@@ -150,7 +150,7 @@ public class Main
 				optZ = new HashMap<String, Integer>(z);
 			}
 
-			if (!UpdateBM.existEmptyBlock(z, NUM_BLOCKS, init) && init >= NUM_INITS) {
+			if (!UpdateBM.existEmptyBlock(optZ, NUM_BLOCKS) && init >= NUM_INITS) {
 				break;
 			}
 

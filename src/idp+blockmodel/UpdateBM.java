@@ -37,7 +37,7 @@ public class UpdateBM
 
 	// check empty blocks (for [current] block): break if all blocks are non-empty 
 	public static boolean
-	existEmptyBlock(Map<String, Integer> z, int NUM_BLOCKS, int init) {
+	existEmptyBlock(Map<String, Integer> z, int NUM_BLOCKS) {
 		double[] tmpCounter = new double[NUM_BLOCKS];
 		for (int k = 0; k < NUM_BLOCKS; k++) {
 			tmpCounter[k] = 0;
