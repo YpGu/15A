@@ -13,7 +13,7 @@ import java.util.*;
 public class Main
 {
 	public static int NUM_BLOCKS;							// Number of Blocks (pre-defined) 
-	public final static int MAX_ITER = 100;						// Maximum number of iterations until convergence 
+	public final static int MAX_ITER = 30;						// Maximum number of iterations until convergence 
 	public final static int NUM_INITS = 5;						// init the configuration multiple times, and keep the one with largest likelihood 
 	public final static boolean WRITE = false;
 
@@ -66,6 +66,7 @@ public class Main
 		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".test", testPositiveData);
 		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".test", trainNegativeData);
 
+/*
 		for (String x: trainPositiveData.getDict()) {
 			System.out.println(x);
 			System.out.println(trainPositiveData.getRow(x).size());
@@ -74,9 +75,9 @@ public class Main
 			Scanner sc = new Scanner(System.in);
 			int gu = sc.nextInt();
 		}
-
+*/
 		// sample weight 
-		sw = trainPositiveData.getDictSize() * (trainPositiveData.getDictSize()-1) / trainPositiveData.getSize() - 1;
+		sw = (double)trainPositiveData.getDictSize() * (trainPositiveData.getDictSize()-1) / (double)trainPositiveData.getSize() - 1;
 //		sw = 1;
 
 		Random rand = new Random(10*init+1);
@@ -99,9 +100,8 @@ public class Main
 			z.put(s, rand.nextInt(NUM_BLOCKS));
 		}
 		eta = new double[NUM_BLOCKS][NUM_BLOCKS];
-		UpdateBM.updateParamHard(trainPositiveData, z, eta);
+		UpdateBM.updateParamHardAtInit(trainPositiveData, trainNegativeData, z, eta, sw);
 
-//		System.out.println("Objective at init = " + Evaluation.calcObj(trainPositiveData, eta, z));
 		System.out.println("Objective at init = " + Evaluation.calcObj(trainPositiveData, trainNegativeData, eta, z, vOut, vIn, vBias, pi, sw, reg));
 
 		return;
@@ -123,8 +123,8 @@ public class Main
 		System.out.println("    Final Block Assignments:");
 		UpdateBM.checkBlocks(z, NUM_BLOCKS);
 
-//		return Evaluation.calcObj(trainPositiveData, eta, z);
-		return 1;
+		return Evaluation.calcObj(trainPositiveData, trainNegativeData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+//		return 1;
 	}
 
 
@@ -140,7 +140,7 @@ public class Main
 		double maxObj = -Double.MAX_VALUE, curObj;
 		int init = 1;
 		while (true) {
-			System.out.println("------ Initialization #" + init + " ------");
+			System.out.println("\n------ Initialization #" + init + " ------");
 			init(args, init);
 			curObj = train();
 			System.out.println("Objective function = " + curObj);

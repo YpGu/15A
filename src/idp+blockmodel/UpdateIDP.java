@@ -53,28 +53,31 @@ public class UpdateIDP
 				}
 			}
 		}
+//		for (String x: data.getDict()) {
+//			Set<String> s2 = nData.getRow(x);
+		double cc = 1.0;
 		for (String x: data.getDict()) {
-			Set<String> s2 = nData.getRow(x);
+			Set<String> s2 = data.getRowComplement(x);
 			for (String y: s2) {								// x !-> y
 				double p = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				double grad = gamma.get(x).get(y) * (1-p);
 				try {
-					gradOut.put(x, gradOut.get(x) - vIn.get(y) * grad * c);
+					gradOut.put(x, gradOut.get(x) - vIn.get(y) * grad * cc);
 				}
                                 catch (java.lang.NullPointerException e) {
-					gradOut.put(x, -vIn.get(y) * grad * c);
+					gradOut.put(x, -vIn.get(y) * grad * cc);
 				}
 				try {
-					gradIn.put(y, gradIn.get(y) - vOut.get(x) * grad * c);
+					gradIn.put(y, gradIn.get(y) - vOut.get(x) * grad * cc);
 				}
                                 catch (java.lang.NullPointerException e) {
-					gradIn.put(y, -vOut.get(x) * grad * c);
+					gradIn.put(y, -vOut.get(x) * grad * cc);
 				}
 				try {
-					gradBias.put(y, gradBias.get(y) - grad * c);
+					gradBias.put(y, gradBias.get(y) - grad * cc);
 				}
                                 catch (java.lang.NullPointerException e) {
-					gradBias.put(y, -grad * c);
+					gradBias.put(y, -grad * cc);
 				}
 			}
 		}

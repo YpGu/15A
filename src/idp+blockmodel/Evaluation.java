@@ -21,6 +21,74 @@ public class Evaluation
 	/// calculate the change in objective function, by changing the class of one node only 
 	public static double
 	changeInObj(
+		SparseMatrix posData,
+		double[][] eta,
+		Map<String, Map<String, Double>> gamma, 
+		Map<String, Integer> z,
+		String x,									// node 
+		int newClassLabelForX,
+		double sw
+	) {
+		long sTime = System.currentTimeMillis();
+
+		if (newClassLabelForX < 0 || newClassLabelForX >= eta.length) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
+
+		double res = 0;
+		int preX = z.get(x), curX = newClassLabelForX;
+
+		// x -> y
+		for (String y: posData.getRow(x)) {
+			int curY = z.get(y);
+			double gamma1 = 1-gamma.get(x).get(y);
+			if (eta[preX][curY] != 0)
+				res -= gamma1 * Math.log(eta[preX][curY] + Double.MIN_VALUE);
+			if (eta[curX][curY] != 0)
+				res += gamma1 * Math.log(eta[curX][curY] + Double.MIN_VALUE);
+		}
+		for (String y: posData.getRowComplement(x)) {
+//		for (String y: negData.getRow(x)) {
+			int curY = z.get(y);
+			double gamma1 = 1-gamma.get(x).get(y);
+			if (eta[preX][curY] != 0)
+//				res -= sw * gamma1 * Math.log(1 - eta[preX][curY] + Double.MIN_VALUE);
+				res -= gamma1 * Math.log(1 - eta[preX][curY] + Double.MIN_VALUE);
+			if (eta[curX][curY] != 0)
+//				res += sw * gamma1 * Math.log(1 - eta[curX][curY] + Double.MIN_VALUE);
+				res += gamma1 * Math.log(1 - eta[curX][curY] + Double.MIN_VALUE);
+		}
+
+		// y -> x
+		for (String y: posData.getColumn(x)) {
+			int curY = z.get(y);
+			double gamma1 = 1-gamma.get(y).get(x);
+			if (eta[curY][preX] != 0)
+				res -= gamma1 * Math.log(eta[curY][preX] + Double.MIN_VALUE);
+			if (eta[curY][curX] != 0)
+				res += gamma1 * Math.log(eta[curY][curX] + Double.MIN_VALUE);
+		}
+		for (String y: posData.getColumnComplement(x)) {
+//		for (String y: negData.getColumn(x)) {
+			int curY = z.get(y);
+			double gamma1 = 1-gamma.get(y).get(x);
+			if (eta[curY][preX] != 0)
+//				res -= sw * gamma1 * Math.log(1 - eta[curY][preX] + Double.MIN_VALUE);
+				res -= gamma1 * Math.log(1 - eta[curY][preX] + Double.MIN_VALUE);
+			if (eta[curY][curX] != 0)
+//				res += sw * gamma1 * Math.log(1 - eta[curY][curX] + Double.MIN_VALUE);
+				res += gamma1 * Math.log(1 - eta[curY][curX] + Double.MIN_VALUE);
+		}
+
+		long fTime = System.currentTimeMillis();
+//		System.out.println("Time: " + (fTime-sTime));
+
+		return res;
+	}
+
+	/// calculate the change in objective function, by changing the class of one node only 
+	public static double
+	changeInObj(
 		SparseMatrix data,
 		double[][] eta,
 		Map<String, Integer> z,
@@ -75,41 +143,51 @@ public class Evaluation
 	}
 
 
-	/// calculate the objective function (log-likelihood of the entire network) 
+
+/*	/// calculate the objective function (log-likelihood of the entire network) 
 	public static double
-	calcObj(SparseMatrix data, double[][] eta, Map<String, Integer> z, int NUM_BLOCKS) {
+	calcObj(
+		SparseMatrix posData, 
+		SparseMatrix negData, 
+		double[][] eta, 
+		Map<String, Map<String, Double>> gamma, 
+		Map<String, Integer> z, 
+		double sw
+	) {
+		System.out.println("Not appear");
+		int NUM_BLOCKS = eta.length;
 //		long sTime = System.currentTimeMillis();
 
 		double[][] m = new double[NUM_BLOCKS][NUM_BLOCKS];
+		double[][] mBar = new double[NUM_BLOCKS][NUM_BLOCKS];
 
-		for (Map.Entry<Tuple<String, String>, Double> e: data.getMat().entrySet()) {
+		for (Map.Entry<Tuple<String, String>, Double> e: posData.getMat().entrySet()) {
 			String x = e.getKey().getX();
 			String y = e.getKey().getY();
-			double v = e.getValue();
+			double v = e.getValue() * gamma.get(x).get(y);
 			int zx = z.get(x);
 			int zy = z.get(y);
 
 			m[zx][zy] += v;
 		}
+		for (Map.Entry<Tuple<String, String>, Double> e: negData.getMat().entrySet()) {
+			String x = e.getKey().getX();
+			String y = e.getKey().getY();
+			double v = e.getValue() * gamma.get(x).get(y) * sw;
+			int zx = z.get(x);
+			int zy = z.get(y);
+
+			mBar[zx][zy] += v;
+		}
 
 //		long sTime1 = System.currentTimeMillis();
 //		System.out.println("Time: " + (sTime1-sTime));
 
-		double[] counter = new double[NUM_BLOCKS];						// counter (K*1): #Block -> num of nodes 
-		for (Map.Entry<String, Integer> i: z.entrySet()) {
-			int block = i.getValue();
-			counter[block] += 1;
-		}
-
 		double res = 0;
 		for (int i = 0; i < NUM_BLOCKS; i++) {
 			for (int j = 0; j < NUM_BLOCKS; j++) {
-				double neg = counter[i] * counter[j];					// might be too large for almost all the block pairs 
-				if (i == j) {
-					neg -= counter[i];
-				}
 				res += m[i][j] * Math.log(eta[i][j] + Double.MIN_VALUE);
-				res += neg * Math.log(1 - eta[i][j] + Double.MIN_VALUE);
+				res += mBar[i][j] * Math.log(1 - eta[i][j] + Double.MIN_VALUE);
 			}
 		}
 
@@ -119,12 +197,13 @@ public class Evaluation
 
 		return res;
 	}
+*/
 
 
 	/// calculate the overall objective function 
 	public static double 
 	calcObj(
-		SparseMatrix data, SparseMatrix nData, double[][] eta, Map<String, Integer> z,	
+		SparseMatrix posData, SparseMatrix negData, double[][] eta, Map<String, Integer> z,	
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
 		Map<String, Double> pi,									// weight of ideology mixture
 		double c,										// sample weight 
@@ -132,14 +211,29 @@ public class Evaluation
 	) {
 		// log likelihood
 		double res = 0;
-		for (String x: data.getDict()) {
-			Set<String> s1 = data.getRow(x);
+		for (String x: posData.getDict()) {
+			Set<String> s1 = posData.getRow(x);
 			for (String y: s1) {								// x -> y
 				int zx = z.get(x);
 				int zy = z.get(y);
 				double p1 = eta[zx][zy];
 				double p2 = logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
-				res += Math.log( (1-pi.get(x)) * p1 + pi.get(y) * p2 + Double.MIN_VALUE );
+				res += Math.log( (1-pi.get(x)) * p1 + pi.get(x) * p2 + Double.MIN_VALUE );
+
+				if (pi.get(x) > 1 || pi.get(x) < 0) {
+					System.out.println("pi error");
+				}
+				if (pi.get(y) > 1 || pi.get(y) < 0) {
+					System.out.println("pi error");
+				}
+			}
+			Set<String> s2 = posData.getRowComplement(x);
+			for (String y: s2) {								// x !-> y
+				int zx = z.get(x);
+				int zy = z.get(y);
+				double p1 = 1 - eta[zx][zy];
+				double p2 = 1 - logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
+				res += Math.log( (1-pi.get(x)) * p1 + pi.get(x) * p2 + Double.MIN_VALUE );
 
 				if (pi.get(x) > 1 || pi.get(x) < 0) {
 					System.out.println("pi error");
@@ -149,8 +243,8 @@ public class Evaluation
 				}
 			}
 		}
-		for (String x: nData.getDict()) {
-			Set<String> s2 = data.getRow(x);
+/*		for (String x: negData.getDict()) {
+			Set<String> s2 = posData.getRow(x);
 			for (String y: s2) {								// x !-> y
 				int zx = z.get(x);
 				int zy = z.get(y);
@@ -159,10 +253,11 @@ public class Evaluation
 				res += Math.log( 1 - (1-pi.get(x)) * p1 - pi.get(y) * p2 + Double.MIN_VALUE ) * c;
 			}
 		}
+*/
 
 		// regularization
 		if (reg != 0) {
-			for (String x: data.getDict()) {
+			for (String x: posData.getDict()) {
 				res -= 0.5 * reg * (vOut.get(x) * vOut.get(x) + vIn.get(x) * vIn.get(x));
 			}
 		}
