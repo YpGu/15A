@@ -207,14 +207,6 @@ public class UpdateBM
 			}
 		}
 
-		System.out.println("sw = " + sw);
-		for (int i = 0; i < NUM_BLOCKS; i++) {
-			for (int j = 0; j < NUM_BLOCKS; j++) {
-				System.out.printf("%f\t", eta[i][j]);
-			}
-			System.out.println("");
-		}
-
 		return;
 	}
 

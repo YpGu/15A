@@ -108,6 +108,18 @@ public class Main
 	}
 
 
+	/// update parameters: for multiple runs, we keep the best set of parameters 
+	public static void
+	saveParam() {
+		optPi = pi;
+		optEta = eta;
+		optOut = vOut; optIn = vIn; optBias = vBias;
+		optZ = z;
+
+		return;
+	}
+
+
 	/// estimate parameters using two-step EM-like algorithm 
 	public static double
 	train() {
@@ -145,9 +157,9 @@ public class Main
 			curObj = train();
 			System.out.println("Objective function = " + curObj);
 			if (curObj > maxObj) {
-				maxObj = curObj; optEta = eta;
-				System.out.println("optZ updated!");
-				optZ = new HashMap<String, Integer>(z);
+				maxObj = curObj;
+				System.out.println("Optimal parameter updated!");
+				saveParam();
 			}
 
 			if (!UpdateBM.existEmptyBlock(optZ, NUM_BLOCKS) && init >= NUM_INITS) {
@@ -164,6 +176,8 @@ public class Main
 			FileParser.output("./res/z_"+NUM_BLOCKS, optZ);
 			FileParser.output("./res/eta_"+NUM_BLOCKS, optEta);
 		}
+
+		Evaluation.auroc(trainPositiveData, optPi, optZ, optEta, optOut, optIn, optBias);
 
 		return;
 	}

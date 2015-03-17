@@ -166,94 +166,62 @@ public class Evaluation
 		return res;
 	}
 
-}
 
-/*	// auroc  (TODO) 
+	// auroc  (TODO) 
 	public static void 
 	auroc(
-		double[][] data
+		SparseMatrix posData,
+		Map<String, Double> pi,
+		Map<String, Integer> z, double[][] eta,
+		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias
 	) {
-		int N = BlockModel.NUM_NODES;
-
 		Map<Integer, Double> recProbs = new HashMap<Integer, Double>();
-		Map<Integer, Integer> recGroundTruth = new HashMap<Integer, Integer>();
+		Set<Integer> posGroundTruth = new HashSet<Integer>();
+		Set<Integer> negGroundTruth = new HashSet<Integer>();
+//		Map<Integer, Boolean> negGroundTruth = new HashMap<Integer, Boolean>();
 
-		int oldSize = 0;
-
-		int lid = 0;
-		for (int x = 0; x < N; x++) {
-			for (int y = 0; y < N; y++) {
-				if (data[x][y] != 0) {
-					int index = x * N + y;
-					double prob = eta[z[x]][z[y]];
-					recProbs.put(lid, prob);
-					recGroundTruth.put(lid, 1);			// positive class
-
-					lid++;
-				}
+		int tupleID = 0;
+		for (String x: posData.getDict()) {
+			Set<String> s1 = posData.getRow(x);
+			for (String y: s1) {
+				int zx = z.get(x), zy = z.get(y);
+				double p1 = eta[zx][zy];
+				double p2 = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
+				double prob = (1-pi.get(x)) * p1 + pi.get(x) * p2;
+				recProbs.put(tupleID, prob);
+				posGroundTruth.add(tupleID);
+				tupleID += 1;
+			}
+			Set<String> s2 = posData.getRowComplement(x);
+			for (String y: s2) {
+				int zx = z.get(x), zy = z.get(y);
+				double p1 = eta[zx][zy];
+				double p2 = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
+				double prob = (1-pi.get(x)) * p1 + pi.get(x) * p2;
+				recProbs.put(tupleID, prob);
+				negGroundTruth.add(tupleID);
+				tupleID += 1;
 			}
 		}
-		int posSamples = recProbs.size();
-		System.out.printf("Size of recProbs = %d\n", recProbs.size());
 
-		try (BufferedReader br = new BufferedReader(new FileReader(fileDir_2)))
-		{
-			String currentLine;
-			while ((currentLine = br.readLine()) != null)
-			{
-				// parse line here
-				// line example: 121323132 \t 987987897
-				String[] tokens = currentLine.split("\t");
-				int x = userDictInv.get(tokens[0].trim());
-				int y = userDictInv.get(tokens[tokens.length-1].trim());
-				int index = x * N + y;
-				double p1 = logis(alpha[x] + beta[y]);
-				double p2 = logis(vOut[x] * vIn[y] + vBias[y]);
-				double prob = pi_1[x] * p1 + pi_2[x] * p2;
-
-		//		recProbs.put(index, prob);
-				recProbs.put(lid, prob);
-		//		recGroundTruth.put(index, -1);			// negative class
-				recGroundTruth.put(lid, -1);			// negative class
-
-		//		if (recProbs.size() == oldSize)
-		//		{
-				//	System.out.println("x = " + x + " y = " + y);
-				//	int s = myInput.nextInt();
-		//			recProbs.remove(index);
-		//			recGroundTruth.remove(index);
-		//		}
-		//		oldSize = recProbs.size();
-
-				lid++;
-			}
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-		int negSamples = recProbs.size() - posSamples;
+		double posSamples = posGroundTruth.size();
+		System.out.println("Size of +'s = " + posSamples);
+		double negSamples = negGroundTruth.size();
+		System.out.println("Size of -'s = " + negSamples);
 
 		// calculate AUC
 		Map<Integer, Double> sortedProbs = ArrayTools.ValueComparator.sortByValue(recProbs);
-
-		System.out.printf("Size of recProbs = %d\n", recProbs.size());
-		System.out.printf("Size of sortedProbs = %d\n", sortedProbs.size());
-
-		double oldX = 0, oldY = 0, newX = 0, newY = 0, lowerAUC = 0, upperAUC = 0;
-		posSamples = (int)sortedProbs.size()/2;
-		negSamples = (int)sortedProbs.size()/2;
-		for (Map.Entry<Integer, Double> entry: sortedProbs.entrySet())
+		double newX = 0, newY = 0, oldX = 0, oldY = 0;
+		double upperAUC = 0, lowerAUC = 0;
+		for (Map.Entry<Integer, Double> e: sortedProbs.entrySet())
 		{
-	//		System.out.println(entry.getKey() + "/" + entry.getValue());
-	//		int s = myInput.nextInt();
-			int curKey = entry.getKey();
-			if (recGroundTruth.get(curKey) > 0)
-			//	newY += 1.0/arrLen;
+			int curKey = e.getKey();
+			if (posGroundTruth.contains(curKey)) {
 				newY += 1.0/posSamples;
-			else
-			//	newX += 1.0/arrLen;
+			}
+			else {
 				newX += 1.0/negSamples;
+			}
 			upperAUC += (newX - oldX) * newY;
 			lowerAUC += (newX - oldX) * oldY;
 
@@ -261,13 +229,9 @@ public class Evaluation
 			oldY = newY;
 		}
 
-		System.out.println("posSamples = " + posSamples);
-		System.out.println("negSamples = " + negSamples);
-		System.out.println("matSizePos = " + matSizePos);
 		System.out.println("AUC between " + lowerAUC + " and " + upperAUC);
 		System.out.println("newY = " + newY + " newX = " + newX);
 
 		return;
 	}
-*/
-
+}
