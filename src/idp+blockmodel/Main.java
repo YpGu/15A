@@ -66,9 +66,18 @@ public class Main
 		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".test", testPositiveData);
 		FileParser.readData("../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num, "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".test", trainNegativeData);
 
+		for (String x: trainPositiveData.getDict()) {
+			System.out.println(x);
+			System.out.println(trainPositiveData.getRow(x).size());
+			System.out.println(trainNegativeData.getRow(x).size());
+
+			Scanner sc = new Scanner(System.in);
+			int gu = sc.nextInt();
+		}
+
 		// sample weight 
 		sw = trainPositiveData.getDictSize() * (trainPositiveData.getDictSize()-1) / trainPositiveData.getSize() - 1;
-//		double c = 1;
+//		sw = 1;
 
 		Random rand = new Random(10*init+1);
 
@@ -103,11 +112,9 @@ public class Main
 	public static double
 	train() {
 		for (int iter = 0; iter < MAX_ITER; iter++) {
-			System.out.println("\t---- Iter = " + iter + " ----");
-			double lr = 0.001;
-			// TODO: change to update.***
+			System.out.println("\n\t---- Iter = " + iter + " ----");
+			double lr = 0.00001;
 			if (Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr)) {
-//			if (UpdateBM.updateHard(data, z, eta)) {
 				break;
 			}
 		}
