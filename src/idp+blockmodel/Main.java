@@ -180,6 +180,7 @@ public class Main
 		}
 
 		// output z
+		System.out.println("Final Block Assignments:");
 		UpdateBM.checkBlocks(optZ, NUM_BLOCKS);
 
 		if (WRITE) {
