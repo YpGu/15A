@@ -16,7 +16,7 @@ public class Main
 {
 	public static int NUM_BLOCKS;							// Number of Blocks (pre-defined) 
 	public final static int MAX_ITER = 100;						// Maximum number of iterations until convergence 
-	public final static int NUM_INITS = 5;						// init the configuration multiple times, and keep the one with largest likelihood 
+	public final static int NUM_INITS = 10;						// init the configuration multiple times, and keep the one with largest likelihood 
 	public final static boolean WRITE = true;					// whether save to file
 
 	public static double sw;							// sample weight or 1 
@@ -173,6 +173,10 @@ public class Main
 			}
 
 			if (!UpdateBM.existEmptyBlock(optZ, NUM_BLOCKS) && init >= NUM_INITS) {
+				break;
+			}
+
+			if (init >= 2*NUM_INITS) {
 				break;
 			}
 
