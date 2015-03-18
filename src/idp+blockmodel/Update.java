@@ -6,9 +6,9 @@ import java.util.*;
 
 public class Update
 {
-	/// E-step: calculate gamma 
+	/// E-step: update gamma 
 	public static void
-	EStep(
+	updateGamma(
 		SparseMatrix posData,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
 		Map<String, Integer> z, double[][] eta,
@@ -84,7 +84,7 @@ public class Update
 					pi.put(x, val);
 				}
 				else {
-					System.out.println("\t\tpi = 0.5");
+				//	System.out.println("\t\tpi = 0.5");
 					pi.put(x, 0.5);
 				}
 			}
@@ -97,7 +97,6 @@ public class Update
 
 
 	/// update method for the unified model 
-//	public static boolean
 	public static double
 	update(
 		SparseMatrix posData, SparseMatrix negData, 
@@ -110,24 +109,24 @@ public class Update
 		double obj;
 		Map<String, Map<String, Double>> gamma = new HashMap<String, Map<String, Double>>();
 
-		System.out.println("\tE-Step: estimating gamma");
-		EStep(posData, vOut, vIn, vBias, z, eta, pi, gamma);
+		System.out.println("\tUpdating Gamma...");
+		updateGamma(posData, vOut, vIn, vBias, z, eta, pi, gamma);
 
-		System.out.println("\tUpdating Pi");
+		System.out.println("\tUpdating Pi...");
 		updatePi(posData, negData, pi, gamma, sw);
 		if (calc) {
 			obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
 			System.out.println("\t\tObjective function = " + obj);
 		}
 
-		System.out.println("\tUpdating IDP parameters");
+		System.out.println("\tUpdating IDP parameters...");
 		UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
 		if (calc) {
 			obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
 			System.out.println("\t\tObjective function = " + obj);
 		}
 
-		System.out.println("\tUpdating BM parameters");
+		System.out.println("\tUpdating BM parameters...");
 		boolean res = UpdateBM.updateHard(posData, negData, z, eta, gamma, sw, vOut, vIn, vBias, pi, reg, calc);
 
 		if (calc) {
@@ -135,7 +134,6 @@ public class Update
 			System.out.println("\t\tObjective function (after updating \\eta) = " + obj);
 		}
 
-//		return res;
 		return Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
 	}
 }

@@ -16,7 +16,7 @@ public class Main
 {
 	public static int NUM_BLOCKS;							// Number of Blocks (pre-defined) 
 	public final static int MAX_ITER = 100;						// Maximum number of iterations until convergence 
-	public final static int NUM_INITS = 1;						// init the configuration multiple times, and keep the one with largest likelihood 
+	public final static int NUM_INITS = 5;						// init the configuration multiple times, and keep the one with largest likelihood 
 	public final static boolean WRITE = true;					// whether save to file
 
 	public static double sw;							// sample weight or 1 
@@ -25,21 +25,21 @@ public class Main
 	public static SparseMatrix trainPositiveData, trainNegativeData;		// Graph data (training: existing/non-existing) 
 	public static SparseMatrix testPositiveData, testNegativeData;			// Graph data (testing: existing/non-existing) 
 
-	public static Map<String, Double> vOut;						// idp - out Ideal Point 
-	public static Map<String, Double> vIn;
-	public static Map<String, Double> vBias;
+	// Parameter Set 
+	public static Map<String, Double> vOut;						// idp - outgoing Ideal Point 
+	public static Map<String, Double> vIn;						// idp - incoming Ideal Point
+	public static Map<String, Double> vBias;					// bias 
 	public static Map<String, Integer> z;						// bkg - Block Assignment
 	public static double[][] eta;							// bkg - Block Parameters (K*K) 
-	public static Map<String, Double> pi;						// weight of idp mixture 
+	public static Map<String, Double> pi;						// weight of [idp mixture]
 
+	// [Optimal] Parameter Set
 	public static Map<String, Double> optOut;
 	public static Map<String, Double> optIn;
 	public static Map<String, Double> optBias;
+	public static Map<String, Integer> optZ;
+	public static double[][] optEta;
 	public static Map<String, Double> optPi;
-	public static Map<String, Integer> optZ;					// [Optimal] Block Assignment 
-	public static double[][] optEta;						// [Optimal] Block Parameters 
-
-	public static Scanner sc;
 
 
 	/// constructor 
@@ -100,7 +100,7 @@ public class Main
 	}
 
 
-	/// update parameters: for multiple runs, we keep the best set of parameters 
+	/// save the optimal parameters: for multiple runs, we keep the best set of parameters 
 	public static void
 	saveParam() {
 		optPi = pi;
@@ -118,6 +118,9 @@ public class Main
 		FileParser.output("./res/z_" + NUM_BLOCKS, optZ);
 		FileParser.output("./res/eta_" + NUM_BLOCKS, optEta);
 		FileParser.output("./res/pi_" + NUM_BLOCKS, optPi);
+		FileParser.output("./res/out_" + NUM_BLOCKS, optOut);
+		FileParser.output("./res/in_" + NUM_BLOCKS, optIn);
+		FileParser.output("./res/bias_" + NUM_BLOCKS, optBias);
 	}
 
 
@@ -128,12 +131,9 @@ public class Main
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("\n\t---- Iter = " + iter + "/" + MAX_ITER + " ----");
 			double lr = 0.0001;
-//			if (Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr)) {
-//				break;
-//			}
 			curObj = Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr);
 			if (iter != 0) {
-				double rate = Math.abs((curObj-preObj)/preObj);
+				double rate = -(curObj-preObj)/preObj;
 				System.out.println("\tObjective function = " + curObj + " rate = " + rate);
 				if (rate < Math.pow(10,-6)) {
 					break;

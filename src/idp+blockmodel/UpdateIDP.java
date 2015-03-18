@@ -17,10 +17,10 @@ public class UpdateIDP
 	/// IDP update: using gradient descent 
 	public static void 
 	update(
-		SparseMatrix data, SparseMatrix nData,
+		SparseMatrix posData, SparseMatrix negData,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
 		Map<String, Double> pi, Map<String, Map<String, Double>> gamma,				// gamma is the estimated weight before IDP mixture 
-		double c,										// sample weight 
+		double sw,										// sample weight 
 		double reg,										// regularization coefficient 
 		double lr										// learning rate 
 	) {
@@ -28,8 +28,8 @@ public class UpdateIDP
 		Map<String, Double> gradIn = new HashMap<String, Double>();
 		Map<String, Double> gradBias = new HashMap<String, Double>();
 
-		for (String x: data.getDict()) {
-			Set<String> s1 = data.getRow(x);
+		for (String x: posData.getDict()) {
+			Set<String> s1 = posData.getRow(x);
 			for (String y: s1) {								// x -> y
 				double p = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				double grad = gamma.get(x).get(y) * (1-p);
@@ -53,11 +53,10 @@ public class UpdateIDP
 				}
 			}
 		}
+		// use all data 
 		double cc = 1.0;
-//		for (String x: data.getDict()) {
-//			Set<String> s2 = nData.getRow(x);
-		for (String x: data.getDict()) {
-			Set<String> s2 = data.getRowComplement(x);
+		for (String x: posData.getDict()) {
+			Set<String> s2 = posData.getRowComplement(x);
 			for (String y: s2) {								// x !-> y
 				double p = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				double grad = gamma.get(x).get(y) * (1-p);
@@ -82,8 +81,36 @@ public class UpdateIDP
 			}
 		}
 
+/*		// use negative data and sample weight 
+		double cc = sw;
+		for (String x: negData.getDict()) {
+			Set<String> s2 = negData.getRow(x);
+			for (String y: s2) {								// x !-> y
+				double p = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
+				double grad = gamma.get(x).get(y) * (1-p);
+				try {
+					gradOut.put(x, gradOut.get(x) - vIn.get(y) * grad * cc);
+				}
+                                catch (java.lang.NullPointerException e) {
+					gradOut.put(x, -vIn.get(y) * grad * cc);
+				}
+				try {
+					gradIn.put(y, gradIn.get(y) - vOut.get(x) * grad * cc);
+				}
+                                catch (java.lang.NullPointerException e) {
+					gradIn.put(y, -vOut.get(x) * grad * cc);
+				}
+				try {
+					gradBias.put(y, gradBias.get(y) - grad * cc);
+				}
+                                catch (java.lang.NullPointerException e) {
+					gradBias.put(y, -grad * cc);
+				}
+			}
+		}
+*/
 		// regularizations
-		for (String x: data.getDict()) {
+		for (String x: posData.getDict()) {
 			try {
 				gradOut.put(x, gradOut.get(x) - reg * vOut.get(x));
 				gradIn.put(x, gradIn.get(x) - reg * vIn.get(x));
@@ -110,7 +137,7 @@ public class UpdateIDP
 		}
 		while (newObj <= oldObj && lsIter < 10 && numIter > 0);
 */
-		for (String x: data.getDict()) {
+		for (String x: posData.getDict()) {
 			try {
 				vOut.put(x, vOut.get(x) + lr * gradOut.get(x));
 				vIn.put(x, vIn.get(x) + lr * gradIn.get(x));

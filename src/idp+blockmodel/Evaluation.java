@@ -87,7 +87,7 @@ public class Evaluation
 	}
 
 
-	/// calculate the overall objective function 
+	/// calculate the overall objective function (log-likelihood) 
 	public static double 
 	calcObj(
 		SparseMatrix posData, SparseMatrix negData, double[][] eta, Map<String, Integer> z,	
@@ -96,7 +96,6 @@ public class Evaluation
 		double c,										// sample weight 
 		double reg										// regularization coefficient 
 	) {
-		// log likelihood
 //		long sTime = System.currentTimeMillis();
 		double res = 0;
 		for (String x: posData.getDict()) {
@@ -117,17 +116,6 @@ public class Evaluation
 				res += Math.log( (1-pi.get(x)) * p1 + pi.get(x) * p2 + Double.MIN_VALUE );
 			}
 		}
-/*		for (String x: negData.getDict()) {
-			Set<String> s2 = posData.getRow(x);
-			for (String y: s2) {								// x !-> y
-				int zx = z.get(x);
-				int zy = z.get(y);
-				double p1 = eta[zx][zy];
-				double p2 = logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
-				res += Math.log( 1 - (1-pi.get(x)) * p1 - pi.get(y) * p2 + Double.MIN_VALUE ) * c;
-			}
-		}
-*/
 
 		// regularization
 		if (reg != 0) {
@@ -137,17 +125,14 @@ public class Evaluation
 		}
 
 		if (res != res) {
-/*
-			output("./" + rel + "Res/pi2", pi_2);
-			output("./" + rel + "Res/alpha", alpha);
-			output("./" + rel + "Res/beta", beta);
-			output("./" + rel + "Res/vOut", vOut);
-			output("./" + rel + "Res/vIn", vIn);
-			output("./" + rel + "Res/vBias", vBias);
-*/
+			int NUM_BLOCKS = eta.length;
+			FileParser.output("./res/z_" + NUM_BLOCKS + ".err", z);
+			FileParser.output("./res/eta_" + NUM_BLOCKS + ".err", eta);
+			FileParser.output("./res/pi_" + NUM_BLOCKS + ".err", pi);
+			FileParser.output("./res/out_" + NUM_BLOCKS + ".err", vOut);
+			FileParser.output("./res/in_" + NUM_BLOCKS + ".err", vIn);
+			FileParser.output("./res/bias_" + NUM_BLOCKS + ".err", vBias);
 			System.out.println("res NAN!");
-			Scanner myInput = new Scanner(System.in);
-			int s = myInput.nextInt();
 		}
 //		long fTime = System.currentTimeMillis();
 //		System.out.println("\t\tTime = " + (fTime-sTime) + " ms");
@@ -206,15 +191,14 @@ public class Evaluation
 		for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
 			int curKey = e.getKey();
 
-//			System.out.println(e.getValue());
-//			Scanner sc = new Scanner(System.in);
-//			int gu = sc.nextInt();
-
 			if (posGroundTruth.contains(curKey)) {
 				newY += 1.0/posSamples;
 			}
-			else {
+			else if (negGroundTruth.contains(curKey)) {
 				newX += 1.0/negSamples;
+			}
+			else {
+				// check key? 
 			}
 			upperAUC += (newX - oldX) * newY;
 			lowerAUC += (newX - oldX) * oldY;

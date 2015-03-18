@@ -14,7 +14,7 @@ import java.util.*;
 
 public class UpdateBM
 {
-	// check blocks
+	// check blocks: return True if no block is empty 
 	public static boolean
 	checkBlocks(Map<String, Integer> z, int NUM_BLOCKS) {
 		boolean noZero = true;
@@ -80,7 +80,6 @@ public class UpdateBM
 			for (int k = 0; k < NUM_BLOCKS; k++) {
 				if (k != preK) {
 					curChange = Evaluation.changeInObj(posData, eta, gamma, z, s, k, sw);
-//					curChange = Evaluation.changeInObj(posData, eta, z, s, k);
 					if (curChange > maxChange) {
 						bestK = k;
 						maxChange = curChange;
@@ -92,17 +91,17 @@ public class UpdateBM
 		}
 
 		if (flag) {
-			System.out.println("\tz has converged.");
+			System.out.println("\tz has converged");
+			return true;
+		}
+
+		if (!checkBlocks(z, NUM_BLOCKS)) {
+		//	System.out.println("\tEmpty block is not allowed :(");
 			return true;
 		}
 
 //		long fTime = System.currentTimeMillis();
 //		System.out.println("Time = " + (fTime-sTime));
-
-		if (!checkBlocks(z, NUM_BLOCKS)) {
-			return true;
-		}
-
 		return false;
 	}
 
