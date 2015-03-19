@@ -29,9 +29,9 @@ public class Main
 	public static Map<String, Double> vOut;						// idp - outgoing Ideal Point 
 	public static Map<String, Double> vIn;						// idp - incoming Ideal Point
 	public static Map<String, Double> vBias;					// bias 
-	public static Map<String, Map<String, Double[]>> phiP2Q;
-	public static Map<String, Map<String, Double[]>> phiQ2P;
-	public static Map<String, Double[]> gamma;
+	public static Map<String, Map<String, double[]>> phiP2Q;
+	public static Map<String, Map<String, double[]>> phiQ2P;
+	public static Map<String, double[]> gamma;
 	public static double[][] matB;
 
 	public static Map<String, Double> pi;						// weight of [idp mixture]
@@ -86,18 +86,31 @@ public class Main
 			vOut.put(s, (rand.nextDouble()-0.5)*1);
 			vIn.put(s, (rand.nextDouble()-0.5)*1);
 			vBias.put(s, (rand.nextDouble()-0.5)*1);
-			pi.put(s, rand.nextDouble() * 0.2 + 0.4);
+//			pi.put(s, rand.nextDouble() * 0.2 + 0.4);
+			pi.put(s, 0.0);
 		}
 
 		// random initialization - z/eta  
-		z = new HashMap<String, Integer>();
-		for (String s: trainPositiveData.getDict()) {
-			z.put(s, rand.nextInt(NUM_BLOCKS));
+		phiP2Q = new HashMap<String, Map<String, double[]>>();
+		phiQ2P = new HashMap<String, Map<String, double[]>>();
+		gamma = new HashMap<String, double[]>();
+		matB = new double[NUM_BLOCKS][NUM_BLOCKS];
+		double[] tmpV = new double[NUM_BLOCKS];
+		for (int k = 0; k < NUM_BLOCKS; k++) {
+			tmpV[k] = 1.0/(double)NUM_BLOCKS;
 		}
-		eta = new double[NUM_BLOCKS][NUM_BLOCKS];
-		UpdateBM.updateParamHardAtInit(trainPositiveData, trainNegativeData, z, eta, sw);
+		for (String p: trainPositiveData.getDict()) {
+			Map<String, double[]> qs = new HashMap<String, double[]>();
+			for (String q: trainPositiveData.getDict()) {
+				qs.put(q, tmpV);
+			}
+			phiP2Q.put(p, qs);
+			phiQ2P.put(p, qs);
+		}
+		UpdateBM.updateParamAtInit(trainPositiveData, gamma, matB);
+//		UpdateBM.updateParamHardAtInit(trainPositiveData, trainNegativeData, z, eta, sw);
 
-		System.out.println("Objective at init = " + Evaluation.calcObj(trainPositiveData, trainNegativeData, eta, z, vOut, vIn, vBias, pi, sw, reg));
+		System.out.println("Objective at init = " + Evaluation.calcObj(trainPositiveData, trainNegativeData, phiP2Q, phiQ2P, matB, gamma, vOut, vIn, vBias, pi, sw, reg));
 
 		return;
 	}
@@ -107,9 +120,7 @@ public class Main
 	public static void
 	saveParam() {
 		optPi = pi;
-		optEta = eta;
 		optOut = vOut; optIn = vIn; optBias = vBias;
-		optZ = z;
 
 		return;
 	}
@@ -134,7 +145,7 @@ public class Main
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("\n\t---- Iter = " + iter + "/" + MAX_ITER + " ----");
 			double lr = 0.0001;
-			curObj = Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr);
+			curObj = Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, phiP2Q, phiQ2P, matB, gamma, pi, sw, reg, lr);
 			if (iter != 0) {
 				double rate = -(curObj-preObj)/preObj;
 				System.out.println("\tObjective function = " + curObj + " rate = " + rate);
@@ -145,11 +156,11 @@ public class Main
 			preObj = curObj;
 		}
 
-		// output z
-		System.out.println("\tFinal Block Assignments:");
-		UpdateBM.checkBlocks(z, NUM_BLOCKS);
+//		// output z
+//		System.out.println("\tFinal Block Assignments:");
+//		UpdateBM.checkBlocks(z, NUM_BLOCKS);
 
-		return Evaluation.calcObj(trainPositiveData, trainNegativeData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+		return Evaluation.calcObj(trainPositiveData, trainNegativeData, phiP2Q, phiQ2P, matB, gamma, vOut, vIn, vBias, pi, sw, reg);
 	}
 
 
@@ -175,9 +186,9 @@ public class Main
 				saveParam();
 			}
 
-			if (!UpdateBM.existEmptyBlock(optZ, NUM_BLOCKS) && init >= NUM_INITS) {
-				break;
-			}
+//			if (!UpdateBM.existEmptyBlock(optZ, NUM_BLOCKS) && init >= NUM_INITS) {
+//				break;
+//			}
 
 			if (init >= 2*NUM_INITS) {
 				break;

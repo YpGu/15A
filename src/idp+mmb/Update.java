@@ -101,39 +101,40 @@ public class Update
 	update(
 		SparseMatrix posData, SparseMatrix negData, 
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias, 
-		Map<String, Integer> z, double[][] eta,	
+		Map<String, Map<String, double[]>> phiP2Q, Map<String, Map<String, double[]>> phiQ2P, 
+		double[][] matB, Map<String, double[]> gamma,
 		Map<String, Double> pi, 
 		double sw, double reg, double lr
 	) {
 		boolean calc = false;
 		double obj;
-		Map<String, Map<String, Double>> gamma = new HashMap<String, Map<String, Double>>();
 
-		System.out.println("\tUpdating Gamma...");
-		updateGamma(posData, vOut, vIn, vBias, z, eta, pi, gamma);
+//		System.out.println("\tUpdating Gamma...");
+//		updateGamma(posData, vOut, vIn, vBias, z, eta, pi, gamma);
 
-		System.out.println("\tUpdating Pi...");
-		updatePi(posData, negData, pi, gamma, sw);
+//		System.out.println("\tUpdating Pi...");
+//		updatePi(posData, negData, pi, gamma, sw);
 		if (calc) {
-			obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+			obj = Evaluation.calcObj(posData, negData, phiP2Q, phiQ2P, matB, gamma, vOut, vIn, vBias, pi, sw, reg);
 			System.out.println("\t\tObjective function = " + obj);
 		}
 
-		System.out.println("\tUpdating IDP parameters...");
-		UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
+//		System.out.println("\tUpdating IDP parameters...");
+//		UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
 		if (calc) {
-			obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+			obj = Evaluation.calcObj(posData, negData, phiP2Q, phiQ2P, matB, gamma, vOut, vIn, vBias, pi, sw, reg);
 			System.out.println("\t\tObjective function = " + obj);
 		}
 
 		System.out.println("\tUpdating BM parameters...");
-		boolean res = UpdateBM.updateHard(posData, negData, z, eta, gamma, sw, vOut, vIn, vBias, pi, reg, calc);
+//		boolean res = UpdateBM.updateHard(posData, negData, z, eta, gamma, sw, vOut, vIn, vBias, pi, reg, calc);
+		boolean res = UpdateBM.updateLatentSoft(posData, phiP2Q, phiQ2P, matB, gamma);
 
-		if (calc) {
-			obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+		if (true) {
+			obj = Evaluation.calcObj(posData, negData, phiP2Q, phiQ2P, matB, gamma, vOut, vIn, vBias, pi, sw, reg);
 			System.out.println("\t\tObjective function (after updating \\eta) = " + obj);
 		}
 
-		return Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+		return Evaluation.calcObj(posData, negData, phiP2Q, phiQ2P, matB, gamma, vOut, vIn, vBias, pi, sw, reg);
 	}
 }

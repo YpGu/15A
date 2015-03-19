@@ -8,6 +8,7 @@ import java.io.*;
 public class SparseMatrix
 {
 	private Map<String, Map<String, Double>> mat;
+	private Map<Tuple<String, String>, Double> privateMat;
 	private Set<String> dict;
 	private Map<String, Set<String>> outNeighborSet;
 	private Map<String, Set<String>> inNeighborSet;
@@ -16,6 +17,7 @@ public class SparseMatrix
 
 	public SparseMatrix() {
 		mat = new HashMap<String, Map<String, Double>>();
+		privateMat = new HashMap<Tuple<String, String>, Double>();
 		dict = new HashSet<String>();
 		outNeighborSet = new HashMap<String, Set<String>>();
 		inNeighborSet = new HashMap<String, Set<String>>();
@@ -33,6 +35,7 @@ public class SparseMatrix
 		return dict;
 	}
 
+	/// TODO
 	public double 
 	getElement(String row, String col) {
 		try {
@@ -42,6 +45,13 @@ public class SparseMatrix
 		catch (java.lang.NullPointerException e) {
 			return 0;
 		}
+	}
+
+	public void 
+	set(String row, String col, double val) {
+		Tuple<String, String> t = new Tuple<String, String>(row, col);
+		privateMat.put(t, val);
+		return;
 	}
 
 	public Set<String> 
@@ -94,21 +104,19 @@ public class SparseMatrix
 		}
 
 		// update neighbor set
-		for (Map.Entry<String, Map<String, Double>> e: mat.entrySet()) {
-			String x = e.getKey();
-			for (Map.Entry<String, Double> f: e.getValue().entrySet()) {
-				String y = f.getKey();
-				double v = f.getValue();
+		for (Map.Entry<Tuple<String, String>, Double> e: privateMat.entrySet()) {
+			String x = e.getKey().getX();
+			String y = e.getKey().getY();
+			double v = e.getValue();
 
-				if (x != y) {							// do not allow self circles
-					Set<String> ys = outNeighborSet.get(x);
-					ys.add(y);
-					outNeighborSet.put(x, ys);
+			if (x != y) {							// do not allow self circles
+				Set<String> ys = outNeighborSet.get(x);
+				ys.add(y);
+				outNeighborSet.put(x, ys);
 
-					Set<String> xs = inNeighborSet.get(y);
-					xs.add(x);
-					inNeighborSet.put(y, xs);
-				}
+				Set<String> xs = inNeighborSet.get(y);
+				xs.add(x);
+				inNeighborSet.put(y, xs);
 			}
 		}
 

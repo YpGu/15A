@@ -20,21 +20,22 @@ public class Evaluation
 
 	/// calculate the derivative of log-gamma function 
 	public static double dLogGamma(double x) {
-		double tmp = (x - 0.5) * Math.log(x + 4.5) - (x + 4.5);
 		double dtmp = (x - 0.5) / (x + 4.5) + Math.log(x + 4.5) - 1;
-		double ser = 1.0 + 76.18009173    / (x + 0)   - 86.50532033    / (x + 1)
-                       + 24.01409822    / (x + 2)   -  1.231739516   / (x + 3)
-                       +  0.00120858003 / (x + 4)   -  0.00000536382 / (x + 5);
-		double dser = -76.18009173    / (x + 0) / (x + 0)  + 86.50532033    / (x + 1) / (x + 1)
-                       - 24.01409822    / (x + 2) / (x + 2)  +  1.231739516   / (x + 3) / (x + 3)
-                       -  0.00120858003 / (x + 4) / (x + 4)  +  0.00000536382 / (x + 5) / (x + 5);
-		return dtmp + dser / ser;
+		double ser = 1.0 + 76.18009173 / (x + 0) - 86.50532033 / (x + 1)
+                       + 24.01409822 / (x + 2) - 1.231739516 / (x + 3)
+                       +  0.00120858003 / (x + 4) -  0.00000536382 / (x + 5);
+		double dser = -76.18009173 / (x + 0) / (x + 0)  + 86.50532033 / (x + 1) / (x + 1)
+                       - 24.01409822 / (x + 2) / (x + 2) + 1.231739516 / (x + 3) / (x + 3)
+                       -  0.00120858003 / (x + 4) / (x + 4) + 0.00000536382 / (x + 5) / (x + 5);
+		double res = dtmp + dser / ser;
+		if (res != res) System.out.println("dLog error");
+		return res;
 	}
 
 
 	/// calculate the expectation of log(\pi) w.r.t. q
 	public static double
-	expt(Map<String, Double[]> gamma, String p, int k) {
+	expt(Map<String, double[]> gamma, String p, int k) {
 		double v1 = gamma.get(p)[k];
 		double v2 = 0;
 		for (double v: gamma.get(p)) {
@@ -117,7 +118,9 @@ public class Evaluation
 	/// calculate the overall objective function (log-likelihood) 
 	public static double 
 	calcObj(
-		SparseMatrix posData, SparseMatrix negData, double[][] eta, Map<String, Integer> z,	
+		SparseMatrix posData, SparseMatrix negData, 
+		Map<String, Map<String, double[]>> phiP2Q, Map<String, Map<String, double[]>> phiQ2p, 
+		double[][] matB, Map<String, double[]> gamma,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
 		Map<String, Double> pi,									// weight of ideology mixture
 		double c,										// sample weight 
@@ -125,22 +128,61 @@ public class Evaluation
 	) {
 //		long sTime = System.currentTimeMillis();
 		double res = 0;
+		Scanner sc = new Scanner(System.in);
 		for (String x: posData.getDict()) {
 			Set<String> s1 = posData.getRow(x);
 			for (String y: s1) {								// x -> y
-				int zx = z.get(x);
-				int zy = z.get(y);
-				double p1 = eta[zx][zy];
+				double p1 = 0;
+				for (int g = 0; g < matB.length; g++) {
+					for (int h = 0; h < matB.length; h++) {
+						double t1 = gamma.get(x)[g], t2 = gamma.get(y)[h];
+						if (matB[g][h] != 0) {
+							p1 += t1 * t2 * matB[g][h];
+						}
+					}
+				}
 				double p2 = logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				res += Math.log( (1-pi.get(x)) * p1 + pi.get(x) * p2 + Double.MIN_VALUE );
+				if (res != res) {
+					System.out.println("res error 1, res = " + res);
+					System.out.printf("x = %s, y = %s\n", x, y);
+					System.out.printf("p1 = %f, p2 = %f, pi = %f\n", p1, p2, pi.get(x));
+					for (int i = 0; i < matB.length; i++) {
+						for (int j = 0; j < matB.length; j++) {
+							System.out.printf("%f\t", matB[i][j]);
+						}
+						System.out.printf("\n");
+					}
+					for (int i = 0; i < matB.length; i++) {
+						System.out.printf("%f\t", gamma.get(x)[i]);
+						System.out.printf("\n");
+					}
+					for (int i = 0; i < matB.length; i++) {
+						System.out.printf("%f\t", gamma.get(y)[i]);
+						System.out.printf("\n");
+					}
+					int gu = sc.nextInt();
+				}
 			}
 			Set<String> s2 = posData.getRowComplement(x);
 			for (String y: s2) {								// x !-> y
-				int zx = z.get(x);
-				int zy = z.get(y);
-				double p1 = 1 - eta[zx][zy];
+				double p1 = 0;
+				for (int g = 0; g < matB.length; g++) {
+					for (int h = 0; h < matB.length; h++) {
+						double t1 = gamma.get(x)[g], t2 = gamma.get(y)[h];
+						if (matB[g][h] != 1) {
+							p1 += t1 * t2 * (1-matB[g][h]);
+						}
+					}
+				}
 				double p2 = 1 - logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				res += Math.log( (1-pi.get(x)) * p1 + pi.get(x) * p2 + Double.MIN_VALUE );
+				if (res != res) {
+					System.out.println("res error 2");
+					System.out.printf("x = %s, y = %s\n", x, y);
+					System.out.printf("p1 = %f, p2 = %f, pi = %f\n", p1, p2, pi.get(x));
+					int gu = sc.nextInt();
+				}
 			}
 		}
 
@@ -152,13 +194,11 @@ public class Evaluation
 		}
 
 		if (res != res) {
-			int NUM_BLOCKS = eta.length;
-			FileParser.output("./res/z_" + NUM_BLOCKS + ".err", z);
-			FileParser.output("./res/eta_" + NUM_BLOCKS + ".err", eta);
-			FileParser.output("./res/pi_" + NUM_BLOCKS + ".err", pi);
-			FileParser.output("./res/out_" + NUM_BLOCKS + ".err", vOut);
-			FileParser.output("./res/in_" + NUM_BLOCKS + ".err", vIn);
-			FileParser.output("./res/bias_" + NUM_BLOCKS + ".err", vBias);
+//			int NUM_BLOCKS = eta.length;
+//			FileParser.output("./res/pi_" + NUM_BLOCKS + ".err", pi);
+//			FileParser.output("./res/out_" + NUM_BLOCKS + ".err", vOut);
+//			FileParser.output("./res/in_" + NUM_BLOCKS + ".err", vIn);
+//			FileParser.output("./res/bias_" + NUM_BLOCKS + ".err", vBias);
 			System.out.println("res NAN!");
 		}
 //		long fTime = System.currentTimeMillis();
