@@ -37,10 +37,11 @@ public class Evaluation
 	public static double
 	expt(Map<String, double[]> gamma, String p, int k) {
 		double v1 = gamma.get(p)[k];
-		double v2 = 0;
-		for (double v: gamma.get(p)) {
-			v2 += v;
-		}
+//		double v2 = 0;
+//		for (double v: gamma.get(p)) {
+//			v2 += v;
+//		}
+		double v2 = gamma.get(p)[gamma.get(p).length-1];
 
 		return dLogGamma(v1)-dLogGamma(v2);
 	}
@@ -135,7 +136,8 @@ public class Evaluation
 				double p1 = 0;
 				for (int g = 0; g < matB.length; g++) {
 					for (int h = 0; h < matB.length; h++) {
-						double t1 = gamma.get(x)[g], t2 = gamma.get(y)[h];
+						double t1 = gamma.get(x)[g]/gamma.get(x)[matB.length], t2 = gamma.get(y)[h]/gamma.get(y)[matB.length];
+//						double t1 = gamma.get(x)[g], t2 = gamma.get(y)[h];
 						if (matB[g][h] != 0) {
 							p1 += t1 * t2 * matB[g][h];
 						}
@@ -169,7 +171,8 @@ public class Evaluation
 				double p1 = 0;
 				for (int g = 0; g < matB.length; g++) {
 					for (int h = 0; h < matB.length; h++) {
-						double t1 = gamma.get(x)[g], t2 = gamma.get(y)[h];
+						double t1 = gamma.get(x)[g]/gamma.get(x)[matB.length], t2 = gamma.get(y)[h]/gamma.get(y)[matB.length];
+//						double t1 = gamma.get(x)[g], t2 = gamma.get(y)[h];
 						if (matB[g][h] != 1) {
 							p1 += t1 * t2 * (1-matB[g][h]);
 						}

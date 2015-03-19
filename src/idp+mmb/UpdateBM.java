@@ -72,18 +72,19 @@ public class UpdateBM
 		for (String x: posData.getDict()) {
 			double[] tmpV = new double[NUM_BLOCKS+1];
 			for (int k = 0; k < NUM_BLOCKS; k++) {
-	//			tmpV[k] = 1.0/(double)NUM_BLOCKS;
+	//			tmpV[k] = 2*(double)N/(double)NUM_BLOCKS;
 				tmpV[k] = rand.nextDouble();
 				tmpV[NUM_BLOCKS] += tmpV[k];
 			}
-			if (tmpV[NUM_BLOCKS] != 0) {
-				for (int k = 0; k < NUM_BLOCKS; k++) {
-					tmpV[k] /= tmpV[NUM_BLOCKS];
-				}
-			}
+	//		if (tmpV[NUM_BLOCKS] != 0) {
+	//			for (int k = 0; k < NUM_BLOCKS; k++) {
+	//				tmpV[k] /= tmpV[NUM_BLOCKS];
+	//			}
+	//		}
 			gamma.put(x, tmpV);
 		}
 	// output some gamma
+		System.out.println("Some gammas:");
 		int ng = 0;
 		for (Map.Entry<String, double[]> e: gamma.entrySet()) {
 			if (ng == 3) break;
@@ -264,7 +265,7 @@ public class UpdateBM
 		double[][] matBDeno = new double[l][l];
 		for (String p: posData.getDict()) {
 			for (String q: posData.getRow(p)) {
-//				double v = posData.getElement(p,q);
+//				double v = posData.getElement(p,q);	// TODO 
 				double v = 1;
 				for (int g = 0; g < l; g++) {
 					for (int h = 0; h < l; h++) {
@@ -292,6 +293,7 @@ public class UpdateBM
 		}
 
 	// try outputing B
+		System.out.println("Matrix B:");
 		for (int g = 0; g < l; g++) {
 			for (int h = 0; h < l; h++) {
 				System.out.printf("%f\t", matB[g][h]);
@@ -302,19 +304,16 @@ public class UpdateBM
 		// update gamma
 		for (String p: posData.getDict()) {
 			double norm = 0;
-			double[] tmpV = new double[l];
+			double[] tmpV = new double[l+1];
 			for (int k = 0; k < l; k++) {
 				for (String q: posData.getRow(p)) {
 					tmpV[k] += phiP2Q.get(p).get(q)[k];
 					tmpV[k] += phiQ2P.get(q).get(p)[k];
 				}
-				norm += tmpV[k];
+				tmpV[l] += tmpV[k];
 			}
-			if (norm != 0) {
-				for (int k = 0; k < l; k++) {
-					tmpV[k] /= norm;
-				}
-			}
+			if (tmpV[l] == 0) tmpV[l] = 1;
+			gamma.put(p, tmpV);
 		}
 
 		return;
