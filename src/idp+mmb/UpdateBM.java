@@ -68,11 +68,11 @@ public class UpdateBM
 		int N = posData.getDict().size();
 
 		// init gamma
+		Random rand = new Random(0);
 		for (String x: posData.getDict()) {
 			double[] tmpV = new double[NUM_BLOCKS+1];
 			for (int k = 0; k < NUM_BLOCKS; k++) {
 	//			tmpV[k] = 1.0/(double)NUM_BLOCKS;
-				Random rand = new Random(0);
 				tmpV[k] = rand.nextDouble();
 				tmpV[NUM_BLOCKS] += tmpV[k];
 			}
@@ -88,7 +88,7 @@ public class UpdateBM
 		for (Map.Entry<String, double[]> e: gamma.entrySet()) {
 			if (ng == 3) break;
 			double[] v = e.getValue();
-			for (int i = 0; i < v.length; i++) {
+			for (int i = 0; i < v.length-1; i++) {
 				System.out.printf("%f\t", v[i]);
 			}
 			System.out.printf("\n");
