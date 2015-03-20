@@ -85,6 +85,7 @@ public class Update
 				}
 				else {
 				//	System.out.println("\t\tpi = 0.5");
+				//	TODO ?? 
 					pi.put(x, 0.5);
 				}
 			}
@@ -120,10 +121,13 @@ public class Update
 		}
 
 		System.out.println("\tUpdating IDP parameters...");
-		UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
-		if (calc) {
-			obj = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
-			System.out.println("\t\tObjective function = " + obj);
+		double iobj1 = 0, iobj2 = 0;
+		for (int i = 0; i < 50; i++) {
+			UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
+			iobj2 = Evaluation.calcObj(posData, negData, eta, z, vOut, vIn, vBias, pi, sw, reg);
+			System.out.println("\t\tObjective function = " + iobj2);
+			if (iobj2 < iobj1 && i != 0) break;
+			iobj1 = iobj2;
 		}
 
 		System.out.println("\tUpdating BM parameters...");

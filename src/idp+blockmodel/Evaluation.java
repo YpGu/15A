@@ -189,6 +189,7 @@ public class Evaluation
 		double newX = 0, newY = 0, oldX = 0, oldY = 0;
 		double upperAUC = 0, lowerAUC = 0;
 		for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
+			Scanner sc = new Scanner(System.in);
 			int curKey = e.getKey();
 
 			if (posGroundTruth.contains(curKey)) {

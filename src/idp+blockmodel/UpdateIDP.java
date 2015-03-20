@@ -115,8 +115,7 @@ public class UpdateIDP
 				gradOut.put(x, gradOut.get(x) - reg * vOut.get(x));
 				gradIn.put(x, gradIn.get(x) - reg * vIn.get(x));
 			}
-			catch (java.lang.NullPointerException e) {
-			}
+			catch (java.lang.NullPointerException e) {}
 		}
 
 /*		// line search
@@ -143,8 +142,7 @@ public class UpdateIDP
 				vIn.put(x, vIn.get(x) + lr * gradIn.get(x));
 				vBias.put(x, vBias.get(x) + lr * gradBias.get(x));
 			}
-			catch (java.lang.NullPointerException e) {
-			}
+			catch (java.lang.NullPointerException e) {}
 		}
 
 		return;

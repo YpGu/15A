@@ -15,8 +15,8 @@ import java.util.*;
 public class Main
 {
 	public static int NUM_BLOCKS;							// Number of Blocks (pre-defined) 
-	public final static int MAX_ITER = 100;						// Maximum number of iterations until convergence 
-	public final static int NUM_INITS = 10;						// init the configuration multiple times, and keep the one with largest likelihood 
+	public final static int MAX_ITER = 10;						// Maximum number of iterations until convergence 
+	public final static int NUM_INITS = 2;						// init the configuration multiple times, and keep the one with largest likelihood 
 	public final static boolean WRITE = true;					// whether save to file
 
 	public static double sw;							// sample weight or 1 
@@ -84,6 +84,7 @@ public class Main
 			vIn.put(s, (rand.nextDouble()-0.5)*1);
 			vBias.put(s, (rand.nextDouble()-0.5)*1);
 			pi.put(s, rand.nextDouble() * 0.2 + 0.4);
+//			pi.put(s, 0.0);
 		}
 
 		// random initialization - z/eta  
@@ -130,7 +131,7 @@ public class Main
 		double preObj = -1, curObj;
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("\n\t---- Iter = " + iter + "/" + MAX_ITER + " ----");
-			double lr = 0.0001;
+			double lr = 0.00005;
 			curObj = Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, z, eta, pi, sw, reg, lr);
 			if (iter != 0) {
 				double rate = -(curObj-preObj)/preObj;
