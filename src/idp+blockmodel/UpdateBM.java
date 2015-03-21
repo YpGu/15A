@@ -79,7 +79,7 @@ public class UpdateBM
 
 			for (int k = 0; k < NUM_BLOCKS; k++) {
 				if (k != preK) {
-					curChange = Evaluation.changeInObj(posData, eta, gamma, z, s, k, sw);
+					curChange = Evaluation.changeInObj(posData, negData, eta, gamma, z, s, k, sw);
 					if (curChange > maxChange) {
 						bestK = k;
 						maxChange = curChange;
@@ -181,12 +181,15 @@ public class UpdateBM
 				int zy = z.get(y);
 				m[zx][zy] += v;
 			}
-			Set<String> s2 = posData.getRowComplement(x);
+		}
+		for (String x: negData.getDict()) {
+			Set<String> s2 = negData.getRow(x);
+//			Set<String> s2 = posData.getRowComplement(x);
 			for (String y: s2) {
 				double v = (1-gamma.get(x).get(y));
 				int zx = z.get(x);
 				int zy = z.get(y);
-				mBar[zx][zy] += v;
+				mBar[zx][zy] += v * sw;
 			}
 		}
 

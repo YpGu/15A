@@ -53,7 +53,7 @@ public class UpdateIDP
 				}
 			}
 		}
-		// use all data 
+/*		// use all data 
 		double cc = 1.0;
 		for (String x: posData.getDict()) {
 			Set<String> s2 = posData.getRowComplement(x);
@@ -80,8 +80,8 @@ public class UpdateIDP
 				}
 			}
 		}
-
-/*		// use negative data and sample weight 
+*/
+		// use negative data and sample weight 
 		double cc = sw;
 		for (String x: negData.getDict()) {
 			Set<String> s2 = negData.getRow(x);
@@ -108,7 +108,7 @@ public class UpdateIDP
 				}
 			}
 		}
-*/
+
 		// regularizations
 		for (String x: posData.getDict()) {
 			try {

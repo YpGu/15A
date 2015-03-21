@@ -15,8 +15,8 @@ import java.util.*;
 public class Main
 {
 	public static int NUM_BLOCKS;							// Number of Blocks (pre-defined) 
-	public final static int MAX_ITER = 10;						// Maximum number of iterations until convergence 
-	public final static int NUM_INITS = 2;						// init the configuration multiple times, and keep the one with largest likelihood 
+	public final static int MAX_ITER = 30;						// Maximum number of iterations until convergence 
+	public final static int NUM_INITS = 1;						// init the configuration multiple times, and keep the one with largest likelihood 
 	public final static boolean WRITE = true;					// whether save to file
 
 	public static double sw;							// sample weight or 1 
@@ -136,9 +136,9 @@ public class Main
 			if (iter != 0) {
 				double rate = -(curObj-preObj)/preObj;
 				System.out.println("\tObjective function = " + curObj + " rate = " + rate);
-				if (rate < Math.pow(10,-6)) {
-					break;
-				}
+//				if (rate < Math.pow(10,-6)) {
+//					break;
+//				}
 			}
 			preObj = curObj;
 		}
@@ -194,9 +194,9 @@ public class Main
 
 		System.out.println("\n------ Evaluation ------");
 		System.out.println("\t------ Training ------");
-		Evaluation.auroc(trainPositiveData, trainNegativeData, optPi, optZ, optEta, optOut, optIn, optBias);
+		Evaluation.auroc(trainPositiveData, trainNegativeData, optPi, optZ, optEta, optOut, optIn, optBias, 1);
 		System.out.println("\t------ Testing ------");
-		Evaluation.auroc(testPositiveData, testNegativeData, optPi, optZ, optEta, optOut, optIn, optBias);
+		Evaluation.auroc(testPositiveData, testNegativeData, optPi, optZ, optEta, optOut, optIn, optBias, 2);
 
 		return;
 	}
