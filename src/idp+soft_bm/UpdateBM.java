@@ -25,6 +25,15 @@ public class UpdateBM
 	) {
 		int K = eta.length;
 
+		// init theta 
+		double[] thetaInit = new double[K];
+		for (int k = 0; k < K; k++) {
+			thetaInit[k] = 1/(double)K;
+		}
+		for (String x: posData.getDict()) {
+			theta.put(x, thetaInit);
+		}
+
 		// update eta 
 		double[][] posM = new double[K][K];
 		double[][] negM = new double[K][K];
@@ -52,15 +61,6 @@ public class UpdateBM
 					eta[g][h] = 0;
 				}
 			}
-		}
-
-		// init theta 
-		double[] thetaInit = new double[K];
-		for (int k = 0; k < K; k++) {
-			thetaInit[k] = 1/(double)K;
-		}
-		for (String x: posData.getDict()) {
-			theta.put(x, thetaInit);
 		}
 
 		return;

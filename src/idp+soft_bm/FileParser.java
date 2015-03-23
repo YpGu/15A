@@ -66,7 +66,22 @@ public class FileParser
 		}
 	}
 
-	/// write two-dimension array to file 
+	public static void
+	outputArray(String fileDir, Map<String, double[]> arr) {
+		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileDir)))) {
+			for (Map.Entry<String, double[]> e: arr.entrySet()) {
+				writer.printf("%s", e.getKey());
+				double[] vs = e.getValue();
+				for (double v: vs) {
+					writer.printf("\t%f", v);
+				}
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void
 	output(
 		String fileDir,

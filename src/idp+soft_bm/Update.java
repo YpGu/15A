@@ -164,15 +164,23 @@ public class Update
 		double obj;
 		Map<String, Map<String, Double>> gamma = new HashMap<String, Map<String, Double>>();
 
+
+		long time1 = System.currentTimeMillis();
 		System.out.println("\tUpdating Gamma...");
 		updateGamma(posData, negData, vOut, vIn, vBias, theta, eta, pi, gamma);
+		long time2 = System.currentTimeMillis();
+//		System.out.println(" Time = " + (time2-time1));
+
 
 		System.out.println("\tUpdating Pi...");
 		updatePi(posData, negData, pi, gamma, sw);
+		long time3 = System.currentTimeMillis();
+//		System.out.println(" Time = " + (time3-time2));
 		if (calc) {
 			obj = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
 			System.out.println("\t\tObjective function = " + obj);
 		}
+
 
 		System.out.println("\tUpdating IDP parameters...");
 		double iobj1 = 0, iobj2 = 0;
@@ -183,14 +191,19 @@ public class Update
 			if (iobj2 < iobj1 && i != 0) break;
 			iobj1 = iobj2;
 		}
+		long time4 = System.currentTimeMillis();
+//		System.out.println(" Time = " + (time4-time3));
+
 
 		System.out.println("\tUpdating BM parameters...");
 		UpdateBM.updateSoft(posData, negData, theta, eta, gamma, sw, vOut, vIn, vBias, pi, reg, calc);
-
 		if (calc) {
 			obj = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
 			System.out.println("\t\tObjective function (after updating \\eta) = " + obj);
 		}
+		long time5 = System.currentTimeMillis();
+//		System.out.println(" Time = " + (time5-time4));
+
 
 		return Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
 	}

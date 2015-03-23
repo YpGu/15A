@@ -113,7 +113,7 @@ public class Main
 	/// save to file
 	public static void 
 	writeToFile() {
-		FileParser.output("./res/theta_" + NUM_BLOCKS, optTheta);
+		FileParser.outputArray("./res/theta_" + NUM_BLOCKS, optTheta);
 		FileParser.output("./res/eta_" + NUM_BLOCKS, optEta);
 		FileParser.output("./res/pi_" + NUM_BLOCKS, optPi);
 		FileParser.output("./res/out_" + NUM_BLOCKS, optOut);
@@ -139,9 +139,6 @@ public class Main
 			}
 			preObj = curObj;
 		}
-
-		// output z
-		System.out.println("\tFinal Block Assignments:");
 
 		return Evaluation.calcObj(trainPositiveData, trainNegativeData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
 	}
