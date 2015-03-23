@@ -83,8 +83,8 @@ public class Main
 			vOut.put(s, (rand.nextDouble()-0.5)*1);
 			vIn.put(s, (rand.nextDouble()-0.5)*1);
 			vBias.put(s, (rand.nextDouble()-0.5)*1);
-			pi.put(s, rand.nextDouble() * 0.2 + 0.4);
-//			pi.put(s, 0.0);
+//			pi.put(s, rand.nextDouble() * 0.2 + 0.4);
+			pi.put(s, 0.0);
 		}
 
 		// random initialization - z/eta  
@@ -182,10 +182,14 @@ public class Main
 		}
 
 		System.out.println("\n------ Evaluation ------");
-		System.out.println("\t------ Training ------");
+		System.out.println("\t------ Training (ROC curve) ------");
 		Evaluation.auroc(trainPositiveData, trainNegativeData, optPi, optTheta, optEta, optOut, optIn, optBias, 1);
-		System.out.println("\t------ Testing ------");
+		System.out.println("\t------ Testing (ROC curve) ------");
 		Evaluation.auroc(testPositiveData, testNegativeData, optPi, optTheta, optEta, optOut, optIn, optBias, 2);
+		System.out.println("\n\t------ Training (P-R curve) ------");
+		Evaluation.auprc(trainPositiveData, trainNegativeData, optPi, optTheta, optEta, optOut, optIn, optBias, 1);
+		System.out.println("\t------ Testing (P-R curve) ------");
+		Evaluation.auprc(testPositiveData, testNegativeData, optPi, optTheta, optEta, optOut, optIn, optBias, 2);
 
 		return;
 	}

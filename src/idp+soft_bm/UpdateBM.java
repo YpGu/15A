@@ -62,6 +62,7 @@ public class UpdateBM
 			for (int h = 0; h < K; h++) {
 				if (posM[g][h] + negM[g][h] != 0) {
 					eta[g][h] = posM[g][h] / (posM[g][h] + negM[g][h]);
+//					eta[g][h] = 0.5;
 				}
 				else {
 					eta[g][h] = 0;
@@ -194,6 +195,7 @@ public class UpdateBM
 			Set<String> s1 = posData.getRow(i);
 			for (String j: s1) {
 				double w = 1 - piGamma.get(i).get(j);
+//				double w = 1;
 				for (int g = 0; g < K; g++) 
 					for (int h = 0; h < K; h++) 
 						posM[g][h] += w * theta.get(i)[g] * theta.get(j)[h];
@@ -201,6 +203,7 @@ public class UpdateBM
 			Set<String> s2 = posData.getRowComplement(i);
 			for (String j: s2) {
 				double w = 1 - piGamma.get(i).get(j);
+//				double w = 1;
 				for (int g = 0; g < K; g++) 
 					for (int h = 0; h < K; h++) 
 						negM[g][h] += w * theta.get(i)[g] * theta.get(j)[h];

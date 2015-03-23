@@ -21,6 +21,7 @@ public class Update
 
 			Set<String> s1 = posData.getRow(x);
 			for (String y: s1) {								// x -> y
+/*
 				double p1 = 0;
 				for (int g = 0; g < K; g++) 
 					for (int h = 0; h < K; h++) 
@@ -30,10 +31,12 @@ public class Update
 				double deno = p1 + p2;
 				double val = p2 / deno;
 				yMap.put(y, val);
-//				yMap.put(y,0.0);		// do not update \pi 
+*/
+				yMap.put(y,0.0);		// do not update \pi 
 			}
 			Set<String> s2 = posData.getRowComplement(x);
 			for (String y: s2) {								// x !-> y
+/*
 				double p1 = 1;
 				for (int g = 0; g < K; g++) 
 					for (int h = 0; h < K; h++) 
@@ -43,7 +46,8 @@ public class Update
 				double deno = p1 + p2;
 				double val = p2 / deno;
 				yMap.put(y, val);
-//				yMap.put(y,0.0);		// do not update \pi 
+*/
+				yMap.put(y,0.0);		// do not update \pi 
 			}
 
 			gamma.put(x, yMap);
@@ -167,23 +171,23 @@ public class Update
 		Map<String, Map<String, Double>> gamma = new HashMap<String, Map<String, Double>>();
 
 
-		long time1 = System.currentTimeMillis();
+	//	long time1 = System.currentTimeMillis();
 		System.out.println("\tUpdating Gamma...");
 		updateGamma(posData, negData, vOut, vIn, vBias, theta, eta, pi, gamma);
 
 
-		System.out.println("\tUpdating Pi...");
-		updatePi(posData, negData, pi, gamma, sw);
-		if (calc) {
-			obj = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
-			System.out.println("\t\tObjective function = " + obj);
-		}
+	//	System.out.println("\tUpdating Pi...");
+	//	updatePi(posData, negData, pi, gamma, sw);
+	//	if (calc) {
+	//		obj = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
+	//		System.out.println("\t\tObjective function = " + obj);
+	//	}
 
 
-		System.out.println("\tUpdating IDP parameters...");
-		double iobj1 = 0, iobj2 = 0;
-		for (int i = 0; i < 3; i++) {
-			UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
+	//	System.out.println("\tUpdating IDP parameters...");
+	//	double iobj1 = 0, iobj2 = 0;
+	//	for (int i = 0; i < 3; i++) {
+	//		UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
 
 //			iobj2 = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
 //			long time7 = System.currentTimeMillis();
@@ -192,7 +196,7 @@ public class Update
 //			System.out.println("\t\tObjective function = " + iobj2);
 //			if (iobj2 < iobj1 && i != 0) break;
 //			iobj1 = iobj2;
-		}
+	//	}
 
 
 		System.out.println("\tUpdating BM parameters...");
