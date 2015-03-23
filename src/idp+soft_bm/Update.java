@@ -30,6 +30,7 @@ public class Update
 				double deno = p1 + p2;
 				double val = p2 / deno;
 				yMap.put(y, val);
+//				yMap.put(y,0.0);		// do not update \pi 
 			}
 			Set<String> s2 = posData.getRowComplement(x);
 			for (String y: s2) {								// x !-> y
@@ -42,6 +43,7 @@ public class Update
 				double deno = p1 + p2;
 				double val = p2 / deno;
 				yMap.put(y, val);
+//				yMap.put(y,0.0);		// do not update \pi 
 			}
 
 			gamma.put(x, yMap);
@@ -168,14 +170,10 @@ public class Update
 		long time1 = System.currentTimeMillis();
 		System.out.println("\tUpdating Gamma...");
 		updateGamma(posData, negData, vOut, vIn, vBias, theta, eta, pi, gamma);
-		long time2 = System.currentTimeMillis();
-//		System.out.println(" Time = " + (time2-time1));
 
 
 		System.out.println("\tUpdating Pi...");
 		updatePi(posData, negData, pi, gamma, sw);
-		long time3 = System.currentTimeMillis();
-//		System.out.println(" Time = " + (time3-time2));
 		if (calc) {
 			obj = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
 			System.out.println("\t\tObjective function = " + obj);
@@ -184,15 +182,17 @@ public class Update
 
 		System.out.println("\tUpdating IDP parameters...");
 		double iobj1 = 0, iobj2 = 0;
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 3; i++) {
 			UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
-			iobj2 = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
-			System.out.println("\t\tObjective function = " + iobj2);
-			if (iobj2 < iobj1 && i != 0) break;
-			iobj1 = iobj2;
+
+//			iobj2 = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
+//			long time7 = System.currentTimeMillis();
+//			System.out.println("\nTime for calculating objective function = " + (time7-time6));
+
+//			System.out.println("\t\tObjective function = " + iobj2);
+//			if (iobj2 < iobj1 && i != 0) break;
+//			iobj1 = iobj2;
 		}
-		long time4 = System.currentTimeMillis();
-//		System.out.println(" Time = " + (time4-time3));
 
 
 		System.out.println("\tUpdating BM parameters...");
@@ -201,8 +201,6 @@ public class Update
 			obj = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
 			System.out.println("\t\tObjective function (after updating \\eta) = " + obj);
 		}
-		long time5 = System.currentTimeMillis();
-//		System.out.println(" Time = " + (time5-time4));
 
 
 		return Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);

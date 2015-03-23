@@ -15,7 +15,7 @@ import java.util.*;
 public class Main
 {
 	public static int NUM_BLOCKS;							// Number of Blocks (pre-defined) 
-	public final static int MAX_ITER = 30;						// Maximum number of iterations until convergence 
+	public final static int MAX_ITER = 100;						// Maximum number of iterations until convergence 
 	public final static int NUM_INITS = 1;						// init the configuration multiple times, and keep the one with largest likelihood 
 	public final static boolean WRITE = true;					// whether save to file
 

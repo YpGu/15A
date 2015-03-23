@@ -75,6 +75,7 @@ public class FileParser
 				for (double v: vs) {
 					writer.printf("\t%f", v);
 				}
+				writer.printf("\n");
 			}
 		}
 		catch (IOException e) {

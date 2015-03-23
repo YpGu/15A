@@ -26,11 +26,17 @@ public class UpdateBM
 		int K = eta.length;
 
 		// init theta 
-		double[] thetaInit = new double[K];
-		for (int k = 0; k < K; k++) {
-			thetaInit[k] = 1/(double)K;
-		}
+		Random rand = new Random(0);
 		for (String x: posData.getDict()) {
+			double norm = 0;
+			double[] thetaInit = new double[K];
+			for (int k = 0; k < K; k++) {
+				thetaInit[k] = 0.1 + rand.nextDouble();
+				norm += thetaInit[k];
+			}
+			for (int k = 0; k < K; k++) {
+				thetaInit[k] /= norm;
+			}
 			theta.put(x, thetaInit);
 		}
 
@@ -205,6 +211,8 @@ public class UpdateBM
 			for (int h = 0; h < K; h++) {
 				if (posM[g][h] + negM[g][h] != 0) {
 					eta[g][h] = posM[g][h] / (posM[g][h] + negM[g][h]);
+					System.out.printf("\teta = %f", eta[g][h]);
+					System.out.println("\tpos = " + posM[g][h] + "\tneg = " + negM[g][h]);
 				}
 				else {
 					eta[g][h] = 0;
