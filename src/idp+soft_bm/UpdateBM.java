@@ -33,7 +33,7 @@ public class UpdateBM
 			double norm = 0;
 			double[] thetaInit = new double[K];
 			for (int k = 0; k < K; k++) {
-				thetaInit[k] = 0.1 + rand.nextDouble();
+				thetaInit[k] = 0.2 + rand.nextDouble();
 				norm += thetaInit[k];
 			}
 			for (int k = 0; k < K; k++) {
@@ -66,8 +66,8 @@ public class UpdateBM
 			}
 		}
 		rho1 /= (double)N;
-		rho1 /= (double)N;
-		rho.put(0,rho1);
+		rho1 /= (double)(N-1);
+		rho.put(0, rho1);
 
 		for (int g = 0; g < K; g++) {
 			for (int h = 0; h < K; h++) {
@@ -91,13 +91,15 @@ public class UpdateBM
 		SparseMatrix posData, 
 		SparseMatrix negData, 
 		Map<String, double[]> theta, 
+		Map<Integer, Double> rho,
 		Map<String, Map<String, Double>> piGamma,
 		double[][] eta, 
 		double sw
 	) {
 //		long sTime = System.currentTimeMillis();
 		int K = eta.length;
-		// this gamma stores the posterior for node pair (i,j) belongs to block pair (g,h)
+		double rho1 = rho.get(0);
+		// this gamma stores the posterior probability that node pair (i,j) belongs to block pair (g,h)
 		Map<String, Map<String, double[][]>> gamma = new HashMap<String, Map<String, double[][]>>();
 
 		// calculate gamma (E-step)
@@ -108,7 +110,8 @@ public class UpdateBM
 				double[][] localGamma = new double[K][K];
 				for (int g = 0; g < K; g++) {
 					for (int h = 0; h < K; h++) {
-						localGamma[g][h] = theta.get(i)[g] * theta.get(j)[h] * eta[g][h];
+						double b = (1-rho1) * eta[g][h];
+						localGamma[g][h] = theta.get(i)[g] * theta.get(j)[h] * b;
 						normGamma += localGamma[g][h];
 					}
 				}
@@ -123,7 +126,8 @@ public class UpdateBM
 				double[][] localGamma = new double[K][K];
 				for (int g = 0; g < K; g++) {
 					for (int h = 0; h < K; h++) {
-						localGamma[g][h] = theta.get(i)[g] * theta.get(j)[h] * (1-eta[g][h]);
+						double b = (1-rho1) * (1-eta[g][h]) + rho1;
+						localGamma[g][h] = theta.get(i)[g] * theta.get(j)[h] * b;
 						normGamma += localGamma[g][h];
 					}
 				}
@@ -144,41 +148,43 @@ public class UpdateBM
 				for (String j: posData.getRow(i)) {
 					double w = 1 - piGamma.get(i).get(j);
 					for (int h = 0; h < K; h++) {
-						localTheta[g] += w * gamma.get(i).get(j)[g][h];
-						normTheta += localTheta[g];
+						double v = w * gamma.get(i).get(j)[g][h];
+						localTheta[g] += v;
+						normTheta += v;
 					}
 				}
 				for (String j: posData.getRowComplement(i)) {
 					double w = 1 - piGamma.get(i).get(j);
 					for (int h = 0; h < K; h++) {
-						localTheta[g] += w * gamma.get(i).get(j)[g][h];
-						normTheta += localTheta[g];
+						double v = w * gamma.get(i).get(j)[g][h]; 
+						localTheta[g] += v;
+						normTheta += v;
 					}
 				}
 	
 				for (String j: posData.getColumn(i)) {
-					double w = 1 - piGamma.get(i).get(j);
+					double w = 1 - piGamma.get(j).get(i);
 					for (int h = 0; h < K; h++) {
-						localTheta[g] += w * gamma.get(j).get(i)[h][g];
-						normTheta += localTheta[g];
+						double v = w * gamma.get(j).get(i)[h][g];
+						localTheta[g] += v;
+						normTheta += v;
 					}
 				}
 				for (String j: posData.getColumnComplement(i)) {
-					double w = 1 - piGamma.get(i).get(j);
+					double w = 1 - piGamma.get(j).get(i);
 					for (int h = 0; h < K; h++) {
-						localTheta[g] += w * gamma.get(j).get(i)[h][g];
-						normTheta += localTheta[g];
+						double v = w * gamma.get(j).get(i)[h][g];
+						localTheta[g] += v;
+						normTheta += v; 
 					}
 				}
 			}
-			if (normTheta != 0) {
-				for (int g = 0; g < K; g++) {
+			if (normTheta != 0) 
+				for (int g = 0; g < K; g++) 
 					localTheta[g] /= normTheta;
-				}
-			}
+
 			theta.put(i, localTheta);
 		}
-
 
 //		long fTime = System.currentTimeMillis();
 //		System.out.println("Time = " + (fTime-sTime));
@@ -210,7 +216,7 @@ public class UpdateBM
 			Set<String> s1 = posData.getRow(i);
 			for (String j: s1) {
 				double w = 1 - piGamma.get(i).get(j);
-//				double w = 1;
+//				double w = 1;		// do not consider weight for the background part
 				for (int g = 0; g < K; g++) {
 					for (int h = 0; h < K; h++) {
 						posM[g][h] += w * theta.get(i)[g] * theta.get(j)[h];
@@ -221,7 +227,7 @@ public class UpdateBM
 			Set<String> s2 = posData.getRowComplement(i);
 			for (String j: s2) {
 				double w = 1 - piGamma.get(i).get(j);
-//				double w = 1;
+//				double w = 1;		// do not consider weight for the background part
 				for (int g = 0; g < K; g++) {
 					for (int h = 0; h < K; h++) {
 						negM[g][h] += w * theta.get(i)[g] * theta.get(j)[h];
@@ -232,10 +238,10 @@ public class UpdateBM
 		}
 		if (rhoDen + rhoNum != 0 && rhoDen != 0) {
 			double rho1 = rhoNum / (rhoDen + rhoNum);
-//			rho.put(0, rho1);
+			rho.put(0, rho1);
 			System.out.println("\trho = " + rho.get(0));
 		}
-		rho.put(0, 0.9);
+//		rho.put(0, 0.9);			// fix the sparsity parameter rho 
 
 		for (int g = 0; g < K; g++) {
 			for (int h = 0; h < K; h++) {
@@ -263,7 +269,7 @@ public class UpdateBM
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias, Map<String, Double> pi, 
 		double reg, boolean calc
 	) {
-		updateLatentSoft(posData, negData, theta, piGamma, eta, sw);
+		updateLatentSoft(posData, negData, theta, rho, piGamma, eta, sw);
 		if (calc) {
 			double obj = Evaluation.calcObj(posData, negData, theta, eta, rho, vOut, vIn, vBias, pi, sw, reg);
 			System.out.println("\t\tObjective function (after optimizing z) = " + obj);

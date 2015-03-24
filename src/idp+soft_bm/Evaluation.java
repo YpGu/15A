@@ -249,8 +249,8 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.println("\tAUC between " + lowerAUC + " and " + upperAUC);
-			System.out.println("\tnewY = " + newY + " newX = " + newX);
+			System.out.printf("\tUsing unified model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 		if (true) {
 			double newX = 0, newY = 0, oldX = 0, oldY = 0;
@@ -274,8 +274,8 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.println("\tAUC between " + lowerAUC + " and " + upperAUC);
-			System.out.println("\tnewY = " + newY + " newX = " + newX);
+			System.out.printf("\tUsing block model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 		if (true) {
 			double newX = 0, newY = 0, oldX = 0, oldY = 0;
@@ -299,8 +299,8 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.println("\tAUC between " + lowerAUC + " and " + upperAUC);
-			System.out.println("\tnewY = " + newY + " newX = " + newX);
+			System.out.printf("\tUsing ideal point model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 
 		return;
@@ -465,8 +465,8 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.println("\tAUC between " + lowerAUC + " and " + upperAUC);
-			System.out.println("\tnewY = " + newY + " newX = " + newX);
+			System.out.printf("\tUsing unified model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 		if (true) {
 			double newX = 0, newY = 0, oldX = 0, oldY = 0;
@@ -488,8 +488,8 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.println("\tAUC between " + lowerAUC + " and " + upperAUC);
-			System.out.println("\tnewY = " + newY + " newX = " + newX);
+			System.out.printf("\tUsing block model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 		if (true) {
 			double newX = 0, newY = 0, oldX = 0, oldY = 0;
@@ -511,8 +511,8 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.println("\tAUC between " + lowerAUC + " and " + upperAUC);
-			System.out.println("\tnewY = " + newY + " newX = " + newX);
+			System.out.printf("\tUsing ideal point model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 
 		return;

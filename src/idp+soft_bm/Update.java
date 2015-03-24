@@ -12,44 +12,50 @@ public class Update
 		SparseMatrix posData, SparseMatrix negData,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
 		Map<String, double[]> theta, double[][] eta, Map<Integer, Double> rho,
-		Map<String, Double> pi, Map<String, Map<String, Double>> gamma
+		Map<String, Double> pi, Map<String, Map<String, Double>> gamma,
+		boolean considerIPM
 	) {
 		int K = eta.length;
+		double rho1 = rho.get(0);
 
 		for (String x: posData.getDict()) {
 			Map<String, Double> yMap = new HashMap<String, Double>();
 
 			Set<String> s1 = posData.getRow(x);
 			for (String y: s1) {								// x -> y
-
-				double p1 = 0;
-				for (int g = 0; g < K; g++) 
-					for (int h = 0; h < K; h++) 
-						p1 += theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
-				p1 *= (1-rho.get(0));
-				p1 *= (1-pi.get(x));
-				double p2 = pi.get(x) * Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
-				double deno = p1 + p2;
-				double val = p2 / deno;
-				yMap.put(y, val);
-
-//				yMap.put(y,0.0);		// do not update \pi 
+				if (considerIPM) {
+					double p1 = 0;
+					for (int g = 0; g < K; g++) 
+						for (int h = 0; h < K; h++) 
+							p1 += theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
+					p1 *= (1-rho1);
+					p1 *= (1-pi.get(x));		// global mixture weight 
+					double p2 = pi.get(x) * Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
+					double deno = p1 + p2;
+					double val = p2 / deno;
+					yMap.put(y, val);
+				}
+				else {
+					yMap.put(y,0.0);		// do not update \pi 
+				}
 			}
 			Set<String> s2 = posData.getRowComplement(x);
 			for (String y: s2) {								// x !-> y
-
-				double p1 = 1;
-				for (int g = 0; g < K; g++) 
-					for (int h = 0; h < K; h++) 
-						p1 -= theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
-				p1 = (1-rho.get(0)) * p1 + rho.get(0);
-				p1 *= (1-pi.get(x));
-				double p2 = pi.get(x) * (1-Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y)));
-				double deno = p1 + p2;
-				double val = p2 / deno;
-				yMap.put(y, val);
-
-//				yMap.put(y,0.0);		// do not update \pi 
+				if (considerIPM) {
+					double p1 = 0;
+					for (int g = 0; g < K; g++) 
+						for (int h = 0; h < K; h++) 
+							p1 += theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
+					p1 = (1-rho1) * (1-p1) + rho.get(0);
+					p1 *= (1-pi.get(x));		// global mixture weight 
+					double p2 = pi.get(x) * (1-Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y)));
+					double deno = p1 + p2;
+					double val = p2 / deno;
+					yMap.put(y, val);
+				}
+				else {
+					yMap.put(y,0.0);		// do not update \pi 
+				}
 			}
 
 			gamma.put(x, yMap);
@@ -167,7 +173,8 @@ public class Update
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias, 
 		Map<String, double[]> theta, double[][] eta, Map<Integer, Double> rho,
 		Map<String, Double> pi, 
-		double sw, double reg, double lr
+		double sw, double reg, double lr,
+		boolean considerIPM			// true if we use unified model; false if we use blockmodel only 
 	) {
 		boolean calc = false;
 		double obj;
@@ -176,29 +183,33 @@ public class Update
 
 	//	long time1 = System.currentTimeMillis();
 		System.out.println("\tUpdating Gamma...");
-		updateGamma(posData, negData, vOut, vIn, vBias, theta, eta, rho, pi, gamma);
+		updateGamma(posData, negData, vOut, vIn, vBias, theta, eta, rho, pi, gamma, considerIPM);
 
 
-		System.out.println("\tUpdating Pi...");
-		updatePi(posData, negData, pi, gamma, sw);
-		if (calc) {
-			obj = Evaluation.calcObj(posData, negData, theta, eta, rho, vOut, vIn, vBias, pi, sw, reg);
-			System.out.println("\t\tObjective function = " + obj);
+		if (considerIPM) {
+			System.out.println("\tUpdating Pi...");
+			updatePi(posData, negData, pi, gamma, sw);
+			if (calc) {
+				obj = Evaluation.calcObj(posData, negData, theta, eta, rho, vOut, vIn, vBias, pi, sw, reg);
+				System.out.println("\t\tObjective function = " + obj);
+			}
 		}
 
 
-		System.out.println("\tUpdating IDP parameters...");
-		double iobj1 = 0, iobj2 = 0;
-		for (int i = 0; i < 3; i++) {
-			UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
+		if (considerIPM) {
+			System.out.println("\tUpdating IDP parameters...");
+			double iobj1 = 0, iobj2 = 0;
+			for (int i = 0; i < 3; i++) {
+				UpdateIDP.update(posData, negData, vOut, vIn, vBias, pi, gamma, sw, reg, lr);
 
-//			iobj2 = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
-//			long time7 = System.currentTimeMillis();
-//			System.out.println("\nTime for calculating objective function = " + (time7-time6));
+	//			iobj2 = Evaluation.calcObj(posData, negData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
+	//			long time7 = System.currentTimeMillis();
+	//			System.out.println("\nTime for calculating objective function = " + (time7-time6));
 
-//			System.out.println("\t\tObjective function = " + iobj2);
-//			if (iobj2 < iobj1 && i != 0) break;
-//			iobj1 = iobj2;
+	//			System.out.println("\t\tObjective function = " + iobj2);
+	//			if (iobj2 < iobj1 && i != 0) break;
+	//			iobj1 = iobj2;
+			}
 		}
 
 

@@ -15,9 +15,11 @@ import java.util.*;
 public class Main
 {
 	public static int NUM_BLOCKS;							// Number of Blocks (pre-defined) 
-	public final static int MAX_ITER = 100;						// Maximum number of iterations until convergence 
+	public final static int MAX_ITER = 10;						// Maximum number of iterations until convergence 
 	public final static int NUM_INITS = 1;						// init the configuration multiple times, and keep the one with largest likelihood 
 	public final static boolean WRITE = true;					// whether save to file
+	public final static boolean considerIPM = true;					// whether consider IPM 
+//	public final static boolean considerIPM = false;				// whether consider IPM 
 
 	public static double sw;							// sample weight or 1 
 	public static double reg;							// regularization coefficient 
@@ -87,8 +89,10 @@ public class Main
 			vOut.put(s, (rand.nextDouble()-0.5)*1);
 			vIn.put(s, (rand.nextDouble()-0.5)*1);
 			vBias.put(s, (rand.nextDouble()-0.5)*1);
-			pi.put(s, rand.nextDouble() * 0.2 + 0.4);
-//			pi.put(s, 0.0);
+			if (considerIPM) 
+				pi.put(s, rand.nextDouble() * 0.2 + 0.4);
+			else 
+				pi.put(s, 0.0);
 		}
 
 		// random initialization - z/eta  
@@ -135,7 +139,7 @@ public class Main
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("\n\t---- Iter = " + iter + "/" + MAX_ITER + " ----");
 			double lr = 0.00005;
-			curObj = Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, theta, eta, rho, pi, sw, reg, lr);
+			curObj = Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, theta, eta, rho, pi, sw, reg, lr, considerIPM);
 			if (iter != 0) {
 				double rate = -(curObj-preObj)/preObj;
 				System.out.println("\tObjective function = " + curObj + " rate = " + rate);
@@ -158,6 +162,10 @@ public class Main
 			System.out.println("Example: java Main friend 10 0.01");
 			System.exit(0);
 		}
+		if (considerIPM) 
+			System.out.println("\nUsing unified model.");
+		else 
+			System.out.println("\nUsing block model.");
 
 		double maxObj = -Double.MAX_VALUE, curObj;
 		int init = 1;
