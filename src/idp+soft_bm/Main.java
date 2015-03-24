@@ -26,19 +26,21 @@ public class Main
 	public static SparseMatrix testPositiveData, testNegativeData;			// Graph data (testing: existing/non-existing) 
 
 	// Parameter Set 
-	public static Map<String, Double> vOut;						// idp - outgoing Ideal Point 
-	public static Map<String, Double> vIn;						// idp - incoming Ideal Point
-	public static Map<String, Double> vBias;					// bias 
-	public static Map<String, double[]> theta;
-	public static double[][] eta;							// bkg - Block Parameters (K*K) 
-	public static Map<String, Double> pi;						// global weight of [idp mixture]
+	public static Map<String, Double> vOut;						// [idp] - outgoing Ideal Point 
+	public static Map<String, Double> vIn;						// [idp] - incoming Ideal Point
+	public static Map<String, Double> vBias;					// [idp] - bias 
+	public static Map<String, double[]> theta;					// [bkg] - latent block indicator, namely p(z|\pi) 
+	public static double[][] eta;							// [bkg] - Block Parameters (K*K) 
+	public static Map<Integer, Double> rho;						// [bkg] - sparsity parameter (the only key is 0) 
+	public static Map<String, Double> pi;						// [mix] global weight of [idp mixture]
 
-	// [Optimal] Parameter Set
+	// [Optimal] Parameter Set 
 	public static Map<String, Double> optOut;
 	public static Map<String, Double> optIn;
 	public static Map<String, Double> optBias;
 	public static Map<String, double[]> optTheta;
 	public static double[][] optEta;
+	public static Map<Integer, Double> optRho;
 	public static Map<String, Double> optPi;
 
 
@@ -49,6 +51,7 @@ public class Main
 		optBias = new HashMap<String, Double>();
 		optPi = new HashMap<String, Double>();
 		optTheta = new HashMap<String, double[]>();
+		optRho = new HashMap<Integer, Double>();
 	}
 
 
@@ -79,20 +82,22 @@ public class Main
 		vIn = new HashMap<String, Double>();
 		vBias = new HashMap<String, Double>();
 		pi = new HashMap<String, Double>();
+		rho = new HashMap<Integer, Double>();
 		for (String s: trainPositiveData.getDict()) {
 			vOut.put(s, (rand.nextDouble()-0.5)*1);
 			vIn.put(s, (rand.nextDouble()-0.5)*1);
 			vBias.put(s, (rand.nextDouble()-0.5)*1);
-//			pi.put(s, rand.nextDouble() * 0.2 + 0.4);
-			pi.put(s, 0.0);
+			pi.put(s, rand.nextDouble() * 0.2 + 0.4);
+//			pi.put(s, 0.0);
 		}
 
 		// random initialization - z/eta  
 		theta = new HashMap<String, double[]>();
 		eta = new double[NUM_BLOCKS][NUM_BLOCKS];
-		UpdateBM.updateParamAtInit(trainPositiveData, trainNegativeData, theta, eta, sw);
+		UpdateBM.updateParamAtInit(trainPositiveData, trainNegativeData, theta, eta, rho, sw);
 
-		System.out.println("Objective at init = " + Evaluation.calcObj(trainPositiveData, trainNegativeData, theta, eta, vOut, vIn, vBias, pi, sw, reg));
+		System.out.println("rho (init) = " + rho.get(0));
+		System.out.println("Objective at init = " + Evaluation.calcObj(trainPositiveData, trainNegativeData, theta, eta, rho, vOut, vIn, vBias, pi, sw, reg));
 
 		return;
 	}
@@ -102,7 +107,7 @@ public class Main
 	public static void
 	saveParam() {
 		optPi = pi;
-		optEta = eta;
+		optEta = eta; optRho = rho;
 		optOut = vOut; optIn = vIn; optBias = vBias;
 		optTheta = theta;
 
@@ -119,6 +124,7 @@ public class Main
 		FileParser.output("./res/out_" + NUM_BLOCKS, optOut);
 		FileParser.output("./res/in_" + NUM_BLOCKS, optIn);
 		FileParser.output("./res/bias_" + NUM_BLOCKS, optBias);
+		FileParser.outputNum("./res/rho_" + NUM_BLOCKS, optRho);
 	}
 
 
@@ -129,7 +135,7 @@ public class Main
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("\n\t---- Iter = " + iter + "/" + MAX_ITER + " ----");
 			double lr = 0.00005;
-			curObj = Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, theta, eta, pi, sw, reg, lr);
+			curObj = Update.update(trainPositiveData, trainNegativeData, vOut, vIn, vBias, theta, eta, rho, pi, sw, reg, lr);
 			if (iter != 0) {
 				double rate = -(curObj-preObj)/preObj;
 				System.out.println("\tObjective function = " + curObj + " rate = " + rate);
@@ -140,7 +146,7 @@ public class Main
 			preObj = curObj;
 		}
 
-		return Evaluation.calcObj(trainPositiveData, trainNegativeData, theta, eta, vOut, vIn, vBias, pi, sw, reg);
+		return Evaluation.calcObj(trainPositiveData, trainNegativeData, theta, eta, rho, vOut, vIn, vBias, pi, sw, reg);
 	}
 
 
@@ -183,13 +189,13 @@ public class Main
 
 		System.out.println("\n------ Evaluation ------");
 		System.out.println("\t------ Training (ROC curve) ------");
-		Evaluation.auroc(trainPositiveData, trainNegativeData, optPi, optTheta, optEta, optOut, optIn, optBias, 1);
+		Evaluation.auroc(trainPositiveData, trainNegativeData, optPi, optTheta, optEta, optRho, optOut, optIn, optBias, 1);
 		System.out.println("\t------ Testing (ROC curve) ------");
-		Evaluation.auroc(testPositiveData, testNegativeData, optPi, optTheta, optEta, optOut, optIn, optBias, 2);
+		Evaluation.auroc(testPositiveData, testNegativeData, optPi, optTheta, optEta, optRho, optOut, optIn, optBias, 2);
 		System.out.println("\n\t------ Training (P-R curve) ------");
-		Evaluation.auprc(trainPositiveData, trainNegativeData, optPi, optTheta, optEta, optOut, optIn, optBias, 1);
+		Evaluation.auprc(trainPositiveData, trainNegativeData, optPi, optTheta, optEta, optRho, optOut, optIn, optBias, 1);
 		System.out.println("\t------ Testing (P-R curve) ------");
-		Evaluation.auprc(testPositiveData, testNegativeData, optPi, optTheta, optEta, optOut, optIn, optBias, 2);
+		Evaluation.auprc(testPositiveData, testNegativeData, optPi, optTheta, optEta, optRho, optOut, optIn, optBias, 2);
 
 		return;
 	}

@@ -22,7 +22,7 @@ public class Evaluation
 	/// calculate the overall objective function (log-likelihood) 
 	public static double 
 	calcObj(
-		SparseMatrix posData, SparseMatrix negData, Map<String, double[]> theta, double[][] eta, 
+		SparseMatrix posData, SparseMatrix negData, Map<String, double[]> theta, double[][] eta, Map<Integer, Double> rho,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
 		Map<String, Double> pi,									// weight of ideology mixture
 		double c,										// sample weight 
@@ -38,6 +38,7 @@ public class Evaluation
 				for (int g = 0; g < K; g++) 
 					for (int h = 0; h < K; h++) 
 						p1 += theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
+				p1 *= rho.get(0);
 				double p2 = logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				res += Math.log( (1-pi.get(x)) * p1 + pi.get(x) * p2 + Double.MIN_VALUE );
 			}
@@ -48,6 +49,7 @@ public class Evaluation
 				for (int g = 0; g < K; g++) 
 					for (int h = 0; h < K; h++) 
 						p1 -= theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
+				p1 = (1-rho.get(0)) * p1 + rho.get(0);
 				double p2 = 1 - logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				res += Math.log( (1-pi.get(x)) * p1 + pi.get(x) * p2 + Double.MIN_VALUE );
 			}
@@ -93,7 +95,7 @@ public class Evaluation
 	auroc(
 		SparseMatrix posData, SparseMatrix negData,
 		Map<String, Double> pi,
-		Map<String, double[]> theta, double[][] eta,
+		Map<String, double[]> theta, double[][] eta, Map<Integer, Double> rho,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
 		int type
 	) {
@@ -112,6 +114,7 @@ public class Evaluation
 				for (int g = 0; g < K; g++) 
 					for (int h = 0; h < K; h++) 
 						p1 += theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
+				p1 *= rho.get(0);
 				double p2 = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				double prob = (1-pi.get(x)) * p1 + pi.get(x) * p2;
 				recProbs.put(tupleID, prob);
@@ -128,6 +131,7 @@ public class Evaluation
 				for (int g = 0; g < K; g++) 
 					for (int h = 0; h < K; h++) 
 						p1 += theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
+				p1 *= rho.get(0);
 				double p2 = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				double prob = (1-pi.get(x)) * p1 + pi.get(x) * p2;
 				recProbs.put(tupleID, prob);
@@ -308,7 +312,7 @@ public class Evaluation
 	auprc(
 		SparseMatrix posData, SparseMatrix negData,
 		Map<String, Double> pi,
-		Map<String, double[]> theta, double[][] eta,
+		Map<String, double[]> theta, double[][] eta, Map<Integer, Double> rho,
 		Map<String, Double> vOut, Map<String, Double> vIn, Map<String, Double> vBias,
 		int type
 	) {
@@ -327,6 +331,7 @@ public class Evaluation
 				for (int g = 0; g < K; g++) 
 					for (int h = 0; h < K; h++) 
 						p1 += theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
+				p1 *= rho.get(0);
 				double p2 = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				double prob = (1-pi.get(x)) * p1 + pi.get(x) * p2;
 				recProbs.put(tupleID, prob);
@@ -343,6 +348,7 @@ public class Evaluation
 				for (int g = 0; g < K; g++) 
 					for (int h = 0; h < K; h++) 
 						p1 += theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
+				p1 *= rho.get(0);
 				double p2 = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
 				double prob = (1-pi.get(x)) * p1 + pi.get(x) * p2;
 				recProbs.put(tupleID, prob);

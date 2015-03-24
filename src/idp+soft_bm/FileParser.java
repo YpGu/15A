@@ -67,6 +67,23 @@ public class FileParser
 	}
 
 	public static void
+	outputNum(String fileDir, Map<Integer, ?> arr) {
+		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileDir)))) {
+			for (Map.Entry<Integer, ?> e: arr.entrySet()) {
+				if (e.getValue() instanceof Double) {
+					writer.printf("%f\n", e.getValue());
+				}
+				else if (e.getValue() instanceof Integer) {
+					writer.printf("%d\n", e.getValue());
+				}
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void
 	outputArray(String fileDir, Map<String, double[]> arr) {
 		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileDir)))) {
 			for (Map.Entry<String, double[]> e: arr.entrySet()) {
