@@ -16,8 +16,8 @@ public class ArrayTools
 			V valueA = map.get(keyA);
 			Comparable<V> valueB = map.get(keyB);
 			if (valueB.equals(valueA)) {
-				return 1;					// keys with same value will not be merged
-			//	return keyB.compareTo(keyA);			// keys with same value will be merged
+				return 1;					// keys with the same value will not be merged
+			//	return keyB.compareTo(keyA);			// keys with the same value will be merged
 			}
 			else {
 				return valueB.compareTo(valueA);		// sort descending

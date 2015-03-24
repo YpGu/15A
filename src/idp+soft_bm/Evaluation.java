@@ -144,7 +144,7 @@ public class Evaluation
 
 		double posSamples = posGroundTruth.size();
 		double negSamples = negGroundTruth.size();
-		System.out.println("\tSize of +'s = " + posSamples + "  Size of -'s = " + negSamples);
+		System.out.printf("\tSize of +'s = %f Size of -'s = %f", posSamples, negSamples);
 
 		// calculate AUC
 		Map<Integer, Double> sortedProbs = ArrayTools.ValueComparator.sortByValue(recProbs);
@@ -225,8 +225,7 @@ public class Evaluation
 			}
 		}
 
-
-		System.out.println("\tsortedProbs size = " + sortedProbs.size());
+		System.out.println(" sortedProbs size = " + sortedProbs.size());
 		if (true) {
 			double newX = 0, newY = 0, oldX = 0, oldY = 0;
 			double upperAUC = 0, lowerAUC = 0;
@@ -361,7 +360,7 @@ public class Evaluation
 
 		double posSamples = posGroundTruth.size();
 		double negSamples = negGroundTruth.size();
-		System.out.println("\tSize of +'s = " + posSamples + "  Size of -'s = " + negSamples);
+		System.out.printf("\tSize of +'s = %f Size of -'s = %f", posSamples, negSamples);
 
 		// calculate AUC
 		Map<Integer, Double> sortedProbs = ArrayTools.ValueComparator.sortByValue(recProbs);
@@ -442,8 +441,7 @@ public class Evaluation
 			}
 		}
 
-
-		System.out.println("\tsortedProbs size = " + sortedProbs.size());
+		System.out.println(" sortedProbs size = " + sortedProbs.size());
 		// x: recall; y: precision
 		if (true) {
 			double newX = 0, newY = 0, oldX = 0, oldY = 0;
