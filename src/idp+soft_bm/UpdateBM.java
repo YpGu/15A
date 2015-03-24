@@ -137,7 +137,7 @@ public class UpdateBM
 							localGamma[g][h] /= normGamma;
 				js.put(j, localGamma);
 			}
-			gamma.put(i,js);
+			gamma.put(i, js);
 		}
 
 		// update theta^{new} (inner M-step 1)
@@ -219,8 +219,9 @@ public class UpdateBM
 //				double w = 1;		// do not consider weight for the background part
 				for (int g = 0; g < K; g++) {
 					for (int h = 0; h < K; h++) {
-						posM[g][h] += w * theta.get(i)[g] * theta.get(j)[h];
-						rhoDen += w * theta.get(i)[g] * theta.get(j)[h];		// denominator
+						double v = w * theta.get(i)[g] * theta.get(j)[h];
+						posM[g][h] += v;
+						rhoDen += v;							// denominator
 					}
 				}
 			}
@@ -230,8 +231,9 @@ public class UpdateBM
 //				double w = 1;		// do not consider weight for the background part
 				for (int g = 0; g < K; g++) {
 					for (int h = 0; h < K; h++) {
-						negM[g][h] += w * theta.get(i)[g] * theta.get(j)[h];
-						rhoNum += w * theta.get(i)[g] * theta.get(j)[h];		// numerator 
+						double v = w * theta.get(i)[g] * theta.get(j)[h];
+						negM[g][h] += v;
+						rhoNum += v;							// numerator
 					}
 				}
 			}
@@ -250,9 +252,8 @@ public class UpdateBM
 					System.out.printf("\teta = %f", eta[g][h]);
 					System.out.println("\tpos = " + posM[g][h] + "\tneg = " + negM[g][h]);
 				}
-				else {
+				else 
 					eta[g][h] = 0;
-				}
 			}
 		}
 
