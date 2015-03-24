@@ -7,7 +7,8 @@ import java.io.*;
 
 public class SparseMatrix
 {
-	private Map<Tuple<String, String>, Double> mat;
+	private Map<String, Map<String, Double>> mat;
+	private Map<Tuple<String, String>, Double> privateMat;
 	private Set<String> dict;
 	private Map<String, Set<String>> outNeighborSet;
 	private Map<String, Set<String>> inNeighborSet;
@@ -15,7 +16,8 @@ public class SparseMatrix
 	private Map<String, Set<String>> inNeighborComplementSet;
 
 	public SparseMatrix() {
-		mat = new HashMap<Tuple<String, String>, Double>();
+		mat = new HashMap<String, Map<String, Double>>();
+		privateMat = new HashMap<Tuple<String, String>, Double>();
 		dict = new HashSet<String>();
 		outNeighborSet = new HashMap<String, Set<String>>();
 		inNeighborSet = new HashMap<String, Set<String>>();
@@ -23,7 +25,7 @@ public class SparseMatrix
 		inNeighborComplementSet = new HashMap<String, Set<String>>();
 	}
 
-	public Map<Tuple<String, String>, Double>
+	public Map<String, Map<String, Double>>
 	getMat() {
 		return mat;
 	}
@@ -33,11 +35,11 @@ public class SparseMatrix
 		return dict;
 	}
 
+	/// TODO
 	public double 
-	get(String row, String col) {
-		Tuple<String, String> t = new Tuple<String, String>(row, col);
+	getElement(String row, String col) {
 		try {
-			double res = mat.get(t);
+			double res = mat.get(row).get(col);
 			return res;
 		}
 		catch (java.lang.NullPointerException e) {
@@ -48,7 +50,7 @@ public class SparseMatrix
 	public void 
 	set(String row, String col, double val) {
 		Tuple<String, String> t = new Tuple<String, String>(row, col);
-		mat.put(t, val);
+		privateMat.put(t, val);
 		return;
 	}
 
@@ -74,7 +76,11 @@ public class SparseMatrix
 
 	public int
 	getSize() {
-		return mat.size();
+		int size = 0;
+		for (Map.Entry<String, Map<String, Double>> e: mat.entrySet()) {
+			size += e.getValue().size();
+		}
+		return size;
 	}
 
 	public int
@@ -98,7 +104,7 @@ public class SparseMatrix
 		}
 
 		// update neighbor set
-		for (Map.Entry<Tuple<String, String>, Double> e: mat.entrySet()) {
+		for (Map.Entry<Tuple<String, String>, Double> e: privateMat.entrySet()) {
 			String x = e.getKey().getX();
 			String y = e.getKey().getY();
 			double v = e.getValue();
@@ -118,7 +124,6 @@ public class SparseMatrix
 		for (String s: dict) {
 			Set<String> yd = new HashSet<String>();
 			Set<String> outNS = outNeighborSet.get(s);
-			int doge = 0, doge2 = 0;
 			for (String t: dict) {
 				if (!outNS.contains(t) && t != s) {
 					yd.add(t);
