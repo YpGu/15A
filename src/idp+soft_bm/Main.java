@@ -1,6 +1,6 @@
 /**
-	First we implement the model in Discovering Latent Classes in Relational Data (Kemp 2004);
-	Every node has a hard class label and the probability that two nodes link depends solely on the blocks they belong to;
+	First we implement the model in Discovering Latent Classes in Relational Data (Kemp 2004) but with soft block clustering;
+	Every node has a soft class label vector and the probability that two nodes link toghther is a weighted sum of block probabilities;
 	Here we do not use sampling to update parameters; instead we use EM;
 	Then we combine the blockmodel with ideal point model;
 	The individual \pi value is also trained by EM;
