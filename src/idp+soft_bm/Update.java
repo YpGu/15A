@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Update
 {
-	/// E-step: update global gamma (from pi) 
+	/// outer E-step: update global gamma (from pi) 
 	public static void
 	updateGamma(
 		SparseMatrix posData, SparseMatrix negData,
@@ -79,7 +79,7 @@ public class Update
 	}
 
 
-	/// update (global) pi (for every user i) 
+	/// outer M-step (1): update (global) pi (for every user i) 
 	public static void
 	updatePi(
 		SparseMatrix posData, SparseMatrix negData,

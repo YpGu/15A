@@ -99,10 +99,10 @@ public class UpdateBM
 //		long sTime = System.currentTimeMillis();
 		int K = eta.length;
 		double rho1 = rho.get(0);
-		// this gamma stores the posterior probability that node pair (i,j) belongs to block pair (g,h)
+		// this (inner) gamma stores the posterior probability that node pair (i,j) belongs to block pair (g,h)
 		Map<String, Map<String, double[][]>> gamma = new HashMap<String, Map<String, double[][]>>();
 
-		// calculate gamma (E-step)
+		// calculate gamma (inner E-step)
 		for (String i: posData.getDict()) {
 			Map<String, double[][]> js = new HashMap<String, double[][]>();
 			for (String j: posData.getRow(i)) {
@@ -140,7 +140,7 @@ public class UpdateBM
 			gamma.put(i,js);
 		}
 
-		// update theta^{new} (one of M-step)
+		// update theta^{new} (inner M-step 1)
 		for (String i: posData.getDict()) {
 			double normTheta = 0;
 			double[] localTheta = new double[K];
@@ -193,7 +193,7 @@ public class UpdateBM
 	}
 
 
-	/// Soft BM step 2 - update model parameters eta 
+	/// Soft BM step 2 - update model parameters eta (inner M-step 2)
 	public static void 
 	updateParamSoft(
 		SparseMatrix posData, 
