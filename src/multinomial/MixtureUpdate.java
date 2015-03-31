@@ -18,7 +18,7 @@ public class MixtureUpdate
 	}
 
 	// Magic. Do not touch. 
-	// calculate the derivative of log-gamma (digamma) function 
+	// Calculate the Derivative of log-Gamma (Digamma) Function 
 	public static double dLogGamma(double x) {
 		if (x == 0) return Math.pow(10,-9);
 		double dtmp = (x - 0.5) / (x + 4.5) + Math.log(x + 4.5) - 1;
@@ -38,6 +38,7 @@ public class MixtureUpdate
 		return res;
 	}
 
+	// Estimate Variational Parameters using EM 
 	public static void
 	variationEM(
 		SparseMatrix<Integer> trainData,
@@ -113,6 +114,7 @@ public class MixtureUpdate
 		return;
 	}
 
+	// Update Model Parameters using Gradient Ascent 
 	public static void
 	modelParamEstimate(
 		SparseMatrix<Integer> trainData,
