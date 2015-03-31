@@ -17,7 +17,7 @@ public class Main
 	public static final int K = 5;					// Number of Latent Features
 	public static int N;						// Number of Users
 	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
-	public static SparseMatrix<Integer> data;
+	public static SparseMatrix<Integer> trainData, testData;
 	public static Map<String, Integer> dict;
 
 	// Model Parameters
@@ -28,7 +28,7 @@ public class Main
 
 	// Variational Parameters
 	public static double[] gamma;					// K * 1
-	public static double[][] phi;					// K * N
+	public static double[][] phi;					// N * K
 	public static double[] varphi;					// N * 1
 
 	// latent Variables
@@ -41,19 +41,19 @@ public class Main
 	public static void
 	init(String[] args) {
 		// Init
-		data = new SparseMatrix<Integer>();
+		trainData = new SparseMatrix<Integer>();
 		dict = new HashMap<String, Integer>();
 		// Read Data
 		String num = "3k", rel = args[0];
 		String dictDir = "../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num;
 		String trainDataDir = "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".train";
 		dict = FileParser.readVocabulary(dictDir);
-		FileParser.readData(data, trainDataDir, dict);
+		FileParser.readData(trainData, trainDataDir, dict);
 		N = dict.size();
 		// Init
 		alpha = new double[K]; beta = new double[K][N]; pi = new double[K];
 		p = new double[N]; q = new double[N]; b = new double[N];
-		gamma = new double[K]; phi = new double[K][N]; varphi = new double[N];
+		gamma = new double[K]; phi = new double[N][K]; varphi = new double[N];
 		theta = new double[K]; lambda = new double[N]; z = new double[K];
 	}
 
@@ -61,7 +61,8 @@ public class Main
 	public static void
 	train() {
 		for (int iter = 0; iter < MAX_ITER; iter++) {
-			MixtureUpdate.update();
+			System.out.println("----- Iteration " + iter);
+			MixtureUpdate.update(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi);
 		}
 
 		return;
