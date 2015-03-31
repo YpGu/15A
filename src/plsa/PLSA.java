@@ -1,5 +1,8 @@
 /**
 	Implementation of Probabilistic Latent Semantic Analysis (PLSA) 
+
+	Note: making dictionary of documents and terms will make the program faster
+	Store the theta/beta in [2d array] instead of [2d Map]
 **/
 
 import java.util.*;
