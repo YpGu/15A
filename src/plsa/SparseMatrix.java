@@ -53,9 +53,11 @@ public class SparseMatrix
 
 	public void 
 	set(String row, String col, double val) {
+	//	System.out.println("row " + row + " col " + col);
 		if (!mat.containsKey(row)) {
 			Map<String, Double> m = new HashMap<String, Double>();
 			mat.put(row, m);
+	//		System.out.println(row + " added!");
 		}
 		mat.get(row).put(col, val);
 		return;

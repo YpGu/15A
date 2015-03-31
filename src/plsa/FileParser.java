@@ -18,7 +18,9 @@ public class FileParser
 				// parse line here
 				// for followers/friends: each line contains 2 ids (x,y) 
 				// for mention and retweet: each line contains 3 ids (x,t,y) 
-				String[] tokens = currentLine.split(" ");
+				String[] tokens = currentLine.split("\t");
+//			System.out.println(tokens.length);
+//			System.out.println(tokens[0]);
 				if (tokens.length == 2) {
 					data.set(tokens[0], tokens[1], 1.0);
 				}
