@@ -23,7 +23,7 @@ public class Main
 	// Model Parameters
 	public static double[] alpha;					// K * 1
 	public static double[][] beta;					// K * N
-	public static double[] pi;					// K * 1
+	public static double[] pi;					// N * 1
 	public static double[] p, q, b;					// N * 1
 
 	// Variational Parameters
@@ -32,10 +32,9 @@ public class Main
 	public static double[] varphi;					// N * 1
 
 	// latent Variables
-	public static double[] theta;					// K * 1
-	public static double[] lambda;					// N * 1
-	public static double[] z;					// K * 1
-
+//	public static double[] theta;					// K * 1
+//	public static double[] lambda;					// N * 1
+//	public static double[] z;					// K * 1
 
 	// Initialization and Read Data 
 	public static void
@@ -43,6 +42,7 @@ public class Main
 		// Init
 		trainData = new SparseMatrix<Integer>();
 		dict = new HashMap<String, Integer>();
+		Random rand = new Random(0);
 		// Read Data
 		String num = "3k", rel = args[0];
 		String dictDir = "../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num;
@@ -51,17 +51,26 @@ public class Main
 		FileParser.readData(trainData, trainDataDir, dict);
 		N = dict.size();
 		// Init
-		alpha = new double[K]; beta = new double[K][N]; pi = new double[K];
+		alpha = new double[K]; beta = new double[K][N]; pi = new double[N];
 		p = new double[N]; q = new double[N]; b = new double[N];
 		gamma = new double[K]; phi = new double[N][K]; varphi = new double[N];
-		theta = new double[K]; lambda = new double[N]; z = new double[K];
+//		theta = new double[K]; lambda = new double[N]; z = new double[K];
+		for (int k = 0; k < K; k++) alpha[k] = 2;
+		for (int k = 0; k < K; k++) for (int j = 0; j < N; j++) beta[k][j] = 1/(double)N;
+		for (int i = 0; i < N; i++) pi[i] = 0.5;
+		for (int i = 0; i < N; i++) {
+			p[i] = rand.nextDouble() - 0.5;
+			q[i] = rand.nextDouble() - 0.5;
+			b[i] = rand.nextDouble() - 0.5;
+		}
+		for (int i = 0; i < N; i++) varphi[i] = 0.5;
 	}
 
 	// Train
 	public static void
 	train() {
 		for (int iter = 0; iter < MAX_ITER; iter++) {
-			System.out.println("----- Iteration " + iter);
+			System.out.println("----- Iteration " + iter + " -----");
 			MixtureUpdate.update(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi);
 		}
 
@@ -77,9 +86,9 @@ public class Main
 	// Entry
 	public static void
 	main(String[] args) {
-		if (args.length != 3) {
-			System.out.println("Usage: java Main <relation> <#blocks> <reg>");
-			System.out.println("Example: java Main friend 10 0.01");
+		if (args.length != 1) {
+			System.out.println("Usage: java Main <relation>");
+			System.out.println("Example: java Main friend");
 			System.exit(0);
 		}
 
