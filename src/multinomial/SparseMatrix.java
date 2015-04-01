@@ -11,8 +11,6 @@ public class SparseMatrix<T>
 	private Set<T> xDict, yDict;
 	private Map<T, Set<T>> outNeighborSet;
 	private Map<T, Set<T>> inNeighborSet;
-	private Map<T, Set<T>> outNeighborComplementSet;		// will not contain x itself 
-	private Map<T, Set<T>> inNeighborComplementSet;
 
 	public SparseMatrix() {
 		mat = new HashMap<T, Map<T, Double>>();
@@ -20,8 +18,6 @@ public class SparseMatrix<T>
 		yDict = new HashSet<T>();
 		outNeighborSet = new HashMap<T, Set<T>>();
 		inNeighborSet = new HashMap<T, Set<T>>();
-		outNeighborComplementSet = new HashMap<T, Set<T>>();
-		inNeighborComplementSet = new HashMap<T, Set<T>>();
 	}
 
 	public Map<T, Map<T, Double>>
@@ -39,7 +35,11 @@ public class SparseMatrix<T>
 		return yDict;
 	}
 
-	/// TODO
+	public double
+	get(T row, T col) {
+		return getElement(row, col);
+	}
+
 	public double 
 	getElement(T row, T col) {
 		try {
@@ -53,11 +53,9 @@ public class SparseMatrix<T>
 
 	public void 
 	set(T row, T col, double val) {
-	//	System.out.println("row " + row + " col " + col);
 		if (!mat.containsKey(row)) {
 			Map<T, Double> m = new HashMap<T, Double>();
 			mat.put(row, m);
-	//		System.out.println(row + " added!");
 		}
 		mat.get(row).put(col, val);
 		return;
@@ -86,16 +84,6 @@ public class SparseMatrix<T>
 	public Set<T> 
 	getColumn(T col) {
 		return inNeighborSet.get(col);
-	}
-
-	public Set<T> 
-	getRowComplement(T row) {
-		return outNeighborComplementSet.get(row);
-	}
-
-	public Set<T> 
-	getColumnComplement(T col) {
-		return inNeighborComplementSet.get(col);
 	}
 
 	public int
@@ -138,11 +126,9 @@ public class SparseMatrix<T>
 		// init neighbor set
 		for (T s: xDict) {
 			outNeighborSet.put(s, new HashSet<T>());
-			outNeighborComplementSet.put(s, new HashSet<T>());
 		}
 		for (T s: yDict) {
 			inNeighborSet.put(s, new HashSet<T>());
-			inNeighborComplementSet.put(s, new HashSet<T>());
 		}
 
 		// update neighbor set
@@ -161,28 +147,6 @@ public class SparseMatrix<T>
 				}
 			}
 		}
-/*
-		// update non-neighbor set
-		for (T s: dict) {
-			Set<T> yd = new HashSet<T>();
-			Set<T> outNS = outNeighborSet.get(s);
-			for (T t: dict) {
-				if (!outNS.contains(t) && t != s) {
-					yd.add(t);
-				}
-			}
-			outNeighborComplementSet.put(s, yd);
-
-			Set<T> xd = new HashSet<T>();
-			Set<T> inNS = inNeighborSet.get(s);
-			for (T t: dict) {
-				if (!inNS.contains(t) && t != s) {
-					xd.add(t);
-				}
-			}
-			inNeighborComplementSet.put(s, xd);
-		}
-*/
 	}
 }
 
