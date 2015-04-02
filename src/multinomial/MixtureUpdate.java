@@ -76,17 +76,17 @@ public class MixtureUpdate
 				// TODO: select one j or many j`s?
 				// ----- if all j`s: \sum_j {\beta_{kj}} is tooooooo small 
 				for (int j: trainData.getRow(i)) {
-					resPhi[i][k] *= Math.pow(1 / (beta[k][j] + Double.MIN_VALUE), trainData.getElement(i, j) * varphi[i]);
+					resPhi[i][k] *= Math.pow(1 / (beta[k][j] + Double.MIN_VALUE), trainData.get(i, j) * varphi[i]);
 					if (Double.isInfinite(resPhi[i][k])) {
 //					if (true) {
-						System.out.println("beta = " + beta[k][j] + " nij = " + trainData.getElement(i,j) + " varphi = " + varphi[i]);
+						System.out.println("beta = " + beta[k][j] + " nij = " + trainData.get(i,j) + " varphi = " + varphi[i]);
 						System.out.println("base = " + (1/(beta[k][j]+Double.MIN_VALUE)));
-						System.out.println("res = " + Math.pow(1 / (beta[k][j] + Double.MIN_VALUE), trainData.getElement(i, j) * varphi[i]));
+						System.out.println("res = " + Math.pow(1 / (beta[k][j] + Double.MIN_VALUE), trainData.get(i, j) * varphi[i]));
 						Scanner sc = new Scanner(System.in);
 						int gu = sc.nextInt();
 					}
 					saveToPower(resPhi, resPhiPosNegPower, i, k);
-//					ePower += trainData.getElement(i, j) * Math.log(beta[k][j] + Double.MIN_VALUE);
+//					ePower += trainData.get(i, j) * Math.log(beta[k][j] + Double.MIN_VALUE);
 				}
 //				resPhi[i][k] *= Math.pow(eBase, ePower);		// exp[ -\varphi_i ] ^ [ \sum_j {n_{ij} log \beta_{kj} ] 
 			}
@@ -100,7 +100,6 @@ public class MixtureUpdate
 */
 		// Update Multinomial Parameter \phi |Time: O(KE)|
 		double[][] resPhi = new double[N][K];
-		int[][] resPhiPosNegPower = new int[N][K];				// pos-neg: 10 ^ (pos-neg) 
 		for (int i = 0; i < N; i++)
 			for (int k = 0; k < K; k++) 
 				resPhi[i][k] = 0;
@@ -119,17 +118,15 @@ public class MixtureUpdate
 		}
 		
 		// Update Bernoulli Parameter \varphi |Time: O(KE)|
-		// TODO 
-		double[] tmpVarphi = new double[N];
+		double[] tmpVarphi = new double[N];					// !!! TODO: most of tmpVarphi's will be zero 
 		for (int i = 0; i < N; i++) {
-			double di = pi[i] / (1-pi[i] + Double.MIN_VALUE);
+			double di = pi[i] / (1-pi[i] + Double.MIN_VALUE) + Double.MIN_VALUE;
 			double ss = Evaluation.sumSigma(i, p, q, b);
 			for (int j: trainData.getRow(i)) {
 				double v = Math.exp(p[i] * q[j] + b[j]) / ss;
-//				double v = Evaluation.sigma(i, j, p, q, b);		// \sigma_{ij} / \prod_{k} {\beta_{kj} ^ \phi_{ik}} 
 				for (int k = 0; k < K; k++)
 					v /= Math.pow(beta[k][j], phi[i][k]);
-				di *= Math.pow(v, trainData.getElement(i, j));
+				di *= Math.pow(v, trainData.get(i, j));
 			}
 			if (Double.isInfinite(di))
 				tmpVarphi[i] = 1;
@@ -172,9 +169,9 @@ public class MixtureUpdate
 		for (int k = 0; k < K; k++) {
 			double normBeta = 0;
 			for (int j = 0; j < N; j++) {
-				for (int i: trainData.getColumn(j)) {			// TODO: check if getColumn exists
+				for (int i: trainData.getColumn(j)) {
 					// beta_{kj} ~~ \sum_{i} { \phi_{ij} * (1-\varphi_i) * n_{ij} } 
-					tmpBeta[k][j] += trainData.getElement(i, j) * phi[i][k] * (1-varphi[i]);
+					tmpBeta[k][j] += trainData.get(i, j) * phi[i][k] * (1-varphi[i]);
 				}
 				normBeta += tmpBeta[k][j];
 			}
@@ -194,7 +191,7 @@ public class MixtureUpdate
 			double ss = Evaluation.sumSigma(i, p, q, b);
 			for (int j: trainData.getRow(i)) {
 				double sg = Math.exp(p[i] * q[j] + b[j]) / ss;		// \sigma_{ij} 
-				double v = trainData.getElement(i, j) * varphi[i];
+				double v = trainData.get(i, j) * varphi[i];
 				gradP[i] += v * (q[j] - ssw/ss);			// \sum_j { \varphi_i * n_{ij} * (q_j - weightedSum)
 				gradQ[j] += v * p[i] * (1-sg);				// \sum_i { \varphi_i * n_{ij} * (1-\sigma_{ij}) * p_i 
 				gradB[j] += v * (1-sg);					// \sum_i { \varphi_i * n_{ij} * (1-\sigma_{ij}) 
@@ -211,6 +208,8 @@ public class MixtureUpdate
 			b[i] += lr * gradB[i];
 		}
 		FileParser.output("./p", p);
+		FileParser.output("./q", q);
+		FileParser.output("./b", b);
 
 		return;
 	}

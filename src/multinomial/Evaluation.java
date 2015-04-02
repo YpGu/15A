@@ -15,17 +15,6 @@ public class Evaluation
 		return v;
 	}
 
-	// Calculate \sigma_{ij} 
-	public static double sigma(int i, int j, double[] p, double[] q, double[] b) {
-		double res = 0;
-		for (int l = 0; l < p.length; l++) {
-			double power = p[i] * q[l] + b[l] - p[i] * q[j] - b[j];
-			if (power < 100) res += Math.exp(power);
-			else return 0;
-		}
-		return res;
-	}
-
 	// Calculate Sum: \sum_{l} { exp(p_i * q_l + b_l) }
 	public static double sumSigma(int i, double[] p, double[] q, double[] b) {
 		double res = 0;
