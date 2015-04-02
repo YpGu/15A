@@ -131,6 +131,10 @@ public class MixtureUpdate
 		// Update Bernoulli Parameter \varphi |Time: O(KE)|
 		double[] tmpVarphi = new double[N];					// !!! TODO: most of tmpVarphi's will be zero, check why  
 		for (int i = 0; i < N; i++) {
+			if (pi[i] == 1) {
+				tmpVarphi[i] = 1;
+				continue;
+			}
 			double di = pi[i] / (1-pi[i] + Double.MIN_VALUE) + Double.MIN_VALUE;
 			double ss = Evaluation.sumSigma(i, p, q, b);
 			for (int j: trainData.getRow(i)) {
@@ -141,7 +145,7 @@ public class MixtureUpdate
 
 				for (int k = 0; k < K; k++) {
 //					System.out.println("beta = " + beta[k][j] + " phi = " + phi[i][k]);
-					v /= Math.pow(beta[k][j], phi[i][k]);
+					v /= Math.pow(beta[k][j] + Double.MIN_VALUE, phi[i][k]);
 				}
 
 //				System.out.println("v = " + v + "\n");
@@ -151,8 +155,11 @@ public class MixtureUpdate
 			}
 			if (Double.isInfinite(di))
 				tmpVarphi[i] = 1;
-			else
+			else if (di == di) 
 				tmpVarphi[i] = 1 - 1/(1+di);
+			else								// Because 0 appears in some beta[k][j]'s 
+				tmpVarphi[i] = 1;					// TODO: are there any better ways to deal with it? 
+						// It's also somehow unfair that varphi[i] is dependent on k, where some of k's might be very irrelevant. 
 		}
 
 		// Update All
