@@ -99,6 +99,7 @@ public class MixtureUpdate
 		}
 */
 		// Update Multinomial Parameter \phi |Time: O(KE)|
+		// TODO: why LDA use only [one] i for every j?
 		double[][] resPhi = new double[N][K];
 		for (int i = 0; i < N; i++)
 			for (int k = 0; k < K; k++) 
@@ -115,7 +116,7 @@ public class MixtureUpdate
 //					double sigma = Math.exp(p[i] * q[j] + b[j]) / ss;
 //					resPhi[j][k] += varphi[i] * trainData.get(i, j) * Math.log(sigma + Double.MIN_VALUE);
 //					resPhi[j][k] += (1-varphi[i]) * trainData.get(i, j) * Math.log(beta[k][j] + Double.MIN_VALUE);
-					resPhi[j][k] += varphi[i] * trainData.get(i, j) * Math.log(beta[k][j] + Double.MIN_VALUE);
+					resPhi[j][k] += (1-varphi[i]) * trainData.get(i, j) * Math.log(beta[k][j] + Double.MIN_VALUE);
 				}
 			//	System.out.println("B: " + resPhi[j][k]);
 				if (k > 0) 
@@ -162,9 +163,9 @@ public class MixtureUpdate
 		} System.out.printf("\nvarphi: ");
 		for (int i = 123; i < 133; i++) {
 			System.out.printf("%f\t", tmpVarphi[i]);
-		} System.out.printf("\nphi:");
+		} System.out.printf("\nphi: ");
 		for (int i = 519; i < 529; i++) {
-			System.out.printf("%f\t", resPhi[i][2]);
+			System.out.printf("%f\t", resPhi[i][1]);
 		} System.out.printf("\n");
 		for (int i = 0; i < N; i++)
 			for (int k = 0; k < K; k++) 

@@ -525,7 +525,7 @@ public class Evaluation
 			}
 		}
 
-		if (WEIGHTED)
+		if (!WEIGHTED)
 			{ averV /= N; averV1 /= N; averV2 /= N; }
 		else
 			{ averV /= posData.getSize(); averV1 /= posData.getSize(); averV2 /= posData.getSize(); }
@@ -964,7 +964,7 @@ public class Evaluation
 			}
 		}
 
-		if (WEIGHTED)
+		if (!WEIGHTED)
 			{ averV /= N; averV1 /= N; averV2 /= N; }
 		else
 			{ averV /= posData.getSize(); averV1 /= posData.getSize(); averV2 /= posData.getSize(); }

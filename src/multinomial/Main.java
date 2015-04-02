@@ -14,9 +14,9 @@ import java.util.*;
 public class Main
 {
 	// Configuration
-	public static final int K = 5;					// Number of Latent Features
+	public static final int K = 10;					// Number of Latent Features
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 10;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
 	public static SparseMatrix<Integer> trainData, testData;
 	public static SparseMatrix<Integer> trainDataNeg, testDataNeg;
 	public static Map<String, Integer> dict;
@@ -61,7 +61,7 @@ public class Main
 		for (int k = 0; k < K; k++) {
 			double sumBeta = 0;
 			for (int j = 0; j < N; j++) {
-				beta[k][j] = rand.nextDouble() + 1;			// !!! beta must not be initialized uniformly
+				beta[k][j] = rand.nextDouble() + 1;	// !!! beta must not be initialized uniformly
 				sumBeta += beta[k][j];
 			}
 			for (int j = 0; j < N; j++) 
