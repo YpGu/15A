@@ -89,7 +89,7 @@ public class Evaluation
 	// auroc 
 	public static void 
 	auroc(
-		SparseMatrix<Integer> posData,
+		SparseMatrix<Integer> posData, SparseMatrix<Integer> negData,
 		double[] alpha,	double[][] beta, double[] pi,
 		double[] p, double[] q, double[] b,
 		double[] gamma, double[][] phi, double[] varphi,
@@ -107,7 +107,8 @@ public class Evaluation
 		for (int i = 0; i < N; i++) {
 			double ss = sumSigma(i, p, q, b);
 			Set<Integer> s = posData.getRow(i);
-			for (int j = 0; j < N; j++) {
+//			for (int j = 0; j < N; j++) {
+			for (int j: s) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += phi[i][k] * beta[k][j];
@@ -117,13 +118,29 @@ public class Evaluation
 				recProbs1.put(tupleID, p1);
 				recProbs2.put(tupleID, p2);
 
-				if (s.contains(j)) {
+//				if (s.contains(j)) {
 					posGroundTruth.add(tupleID);
-				}
-				else if (j != i) {
-					negGroundTruth.add(tupleID);
-				}
+//				}
+//				else if (j != i) {
+//					negGroundTruth.add(tupleID);
+//				}
 
+				tupleID += 1;
+			}
+		}
+		for (int i = 0; i < N; i++) {
+			double ss = sumSigma(i, p, q, b);
+			Set<Integer> s = negData.getRow(i);
+			for (int j: s) {
+				double p1 = 0;
+				for (int k = 0; k < K; k++) 
+					p1 += phi[i][k] * beta[k][j];
+				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				double prob = (1-pi[i]) * p1 + pi[i] * p2;
+				recProbs.put(tupleID, prob);
+				recProbs1.put(tupleID, p1);
+				recProbs2.put(tupleID, p2);
+				negGroundTruth.add(tupleID);
 				tupleID += 1;
 			}
 		}
@@ -132,13 +149,13 @@ public class Evaluation
 		double negSamples = negGroundTruth.size();
 		System.out.printf("\tSize of +'s = %f Size of -'s = %f", posSamples, negSamples);
 
-		// calculate AUC
+		// calculate AUROC
 		Map<Integer, Double> sortedProbs = ArrayTools.ValueComparator.sortByValue(recProbs);
 		Map<Integer, Double> sortedProbs1 = ArrayTools.ValueComparator.sortByValue(recProbs1);
 		Map<Integer, Double> sortedProbs2 = ArrayTools.ValueComparator.sortByValue(recProbs2);
 
 		if (type == 1) {
-			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/secMixtureTrain")))) {
+			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTrain")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
 					if (posGroundTruth.contains(e.getKey())) 
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
@@ -149,7 +166,7 @@ public class Evaluation
 			catch (IOException e) {
 				e.printStackTrace();
 			}
-			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/secMixtureTrain_p1")))) {
+			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTrain_p1")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs1.entrySet()) {
 					if (posGroundTruth.contains(e.getKey())) 
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
@@ -160,7 +177,7 @@ public class Evaluation
 			catch (IOException e) {
 				e.printStackTrace();
 			}
-			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/secMixtureTrain_p2")))) {
+			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTrain_p2")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs2.entrySet()) {
 					if (posGroundTruth.contains(e.getKey())) 
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
@@ -172,10 +189,10 @@ public class Evaluation
 				e.printStackTrace();
 			}
 		}
-/*		if (type == 2) {
-			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/secMixtureTest")))) {
+		if (type == 2) {
+			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTest")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
-					if (e.getKey() < sortedProbs.size()/2.0) 
+					if (posGroundTruth.contains(e.getKey()))
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
 					else
 						writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
@@ -184,9 +201,9 @@ public class Evaluation
 			catch (IOException e) {
 				e.printStackTrace();
 			}
-			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/secMixtureTest_p1")))) {
+			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTest_p1")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs1.entrySet()) {
-					if (e.getKey() < sortedProbs1.size()/2.0) 
+					if (posGroundTruth.contains(e.getKey()))
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
 					else
 						writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
@@ -195,9 +212,9 @@ public class Evaluation
 			catch (IOException e) {
 				e.printStackTrace();
 			}
-			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/secMixtureTest_p2")))) {
+			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTest_p2")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs2.entrySet()) {
-					if (e.getKey() < sortedProbs2.size()/2.0) 
+					if (posGroundTruth.contains(e.getKey()))
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
 					else
 						writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
@@ -207,7 +224,7 @@ public class Evaluation
 				e.printStackTrace();
 			}
 		}
-*/
+
 		System.out.println(" sortedProbs size = " + sortedProbs.size());
 		if (true) {
 			double newX = 0, newY = 0, oldX = 0, oldY = 0;
@@ -231,7 +248,7 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.printf("\tUsing unified model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.printf("\tUsing unified model: AUROC between %f and %f", lowerAUC, upperAUC);
 			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 		if (true) {
@@ -256,7 +273,7 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.printf("\tUsing block model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.printf("\tUsing background model: AUROC between %f and %f", lowerAUC, upperAUC);
 			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 		if (true) {
@@ -281,7 +298,7 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.printf("\tUsing ideal point model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.printf("\tUsing ideal point model: AUROC between %f and %f", lowerAUC, upperAUC);
 			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 
@@ -292,7 +309,7 @@ public class Evaluation
 	// au p-r c
 	public static void 
 	auprc(
-		SparseMatrix<Integer> posData,
+		SparseMatrix<Integer> posData, SparseMatrix<Integer> negData,
 		double[] alpha,	double[][] beta, double[] pi,
 		double[] p, double[] q, double[] b,
 		double[] gamma, double[][] phi, double[] varphi,
@@ -307,33 +324,39 @@ public class Evaluation
 		Set<Integer> negGroundTruth = new HashSet<Integer>();
 
 		int tupleID = 0;
-		for (String x: posData.getDict()) {
-			Set<String> s1 = posData.getRow(x);
-			for (String y: s1) {
+		for (int i = 0; i < N; i++) {
+			double ss = sumSigma(i, p, q, b);
+			Set<Integer> s = posData.getRow(i);
+//			for (int j = 0; j < N; j++) {
+			for (int j: s) {
 				double p1 = 0;
-				for (int g = 0; g < K; g++) 
-					for (int h = 0; h < K; h++) 
-						p1 += theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
-				p1 *= rho.get(0);
-				double p2 = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
-				double prob = (1-pi.get(x)) * p1 + pi.get(x) * p2;
+				for (int k = 0; k < K; k++) 
+					p1 += phi[i][k] * beta[k][j];
+				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
 				recProbs2.put(tupleID, p2);
-				posGroundTruth.add(tupleID);
+
+//				if (s.contains(j)) {
+					posGroundTruth.add(tupleID);
+//				}
+//				else if (j != i) {
+//					negGroundTruth.add(tupleID);
+//				}
+
 				tupleID += 1;
 			}
 		}
-		for (String x: negData.getDict()) {
-			Set<String> s2 = negData.getRow(x);
-			for (String y: s2) {
+		for (int i = 0; i < N; i++) {
+			double ss = sumSigma(i, p, q, b);
+			Set<Integer> s = negData.getRow(i);
+			for (int j: s) {
 				double p1 = 0;
-				for (int g = 0; g < K; g++) 
-					for (int h = 0; h < K; h++) 
-						p1 += theta.get(x)[g] * theta.get(y)[h] * eta[g][h];
-				p1 *= rho.get(0);
-				double p2 = Evaluation.logis(vOut.get(x) * vIn.get(y) + vBias.get(y));
-				double prob = (1-pi.get(x)) * p1 + pi.get(x) * p2;
+				for (int k = 0; k < K; k++) 
+					p1 += phi[i][k] * beta[k][j];
+				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
 				recProbs2.put(tupleID, p2);
@@ -346,7 +369,7 @@ public class Evaluation
 		double negSamples = negGroundTruth.size();
 		System.out.printf("\tSize of +'s = %f Size of -'s = %f", posSamples, negSamples);
 
-		// calculate AUC
+		// calculate AUPRC
 		Map<Integer, Double> sortedProbs = ArrayTools.ValueComparator.sortByValue(recProbs);
 		Map<Integer, Double> sortedProbs1 = ArrayTools.ValueComparator.sortByValue(recProbs1);
 		Map<Integer, Double> sortedProbs2 = ArrayTools.ValueComparator.sortByValue(recProbs2);
@@ -354,13 +377,10 @@ public class Evaluation
 		if (type == 1) {
 			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTrain")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
-					if (e.getKey() < sortedProbs.size()/2.0) {
+					if (posGroundTruth.contains(e.getKey())) 
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-					}
 					else
-					{
 						writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
 				}
 			}
 			catch (IOException e) {
@@ -368,7 +388,7 @@ public class Evaluation
 			}
 			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTrain_p1")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs1.entrySet()) {
-					if (e.getKey() < sortedProbs1.size()/2.0) 
+					if (posGroundTruth.contains(e.getKey())) 
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
 					else
 						writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
@@ -379,7 +399,7 @@ public class Evaluation
 			}
 			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTrain_p2")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs2.entrySet()) {
-					if (e.getKey() < sortedProbs2.size()/2.0) 
+					if (posGroundTruth.contains(e.getKey())) 
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
 					else
 						writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
@@ -392,7 +412,7 @@ public class Evaluation
 		if (type == 2) {
 			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTest")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
-					if (e.getKey() < sortedProbs.size()/2.0) 
+					if (posGroundTruth.contains(e.getKey())) 
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
 					else
 						writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
@@ -403,7 +423,7 @@ public class Evaluation
 			}
 			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTest_p1")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs1.entrySet()) {
-					if (e.getKey() < sortedProbs1.size()/2.0) 
+					if (posGroundTruth.contains(e.getKey())) 
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
 					else
 						writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
@@ -414,7 +434,7 @@ public class Evaluation
 			}
 			try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTest_p2")))) {
 				for (Map.Entry<Integer, Double> e: sortedProbs2.entrySet()) {
-					if (e.getKey() < sortedProbs2.size()/2.0) 
+					if (posGroundTruth.contains(e.getKey())) 
 						writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
 					else
 						writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
@@ -447,7 +467,7 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.printf("\tUsing unified model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.printf("\tUsing unified model: AUPRC between %f and %f", lowerAUC, upperAUC);
 			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 		if (true) {
@@ -470,7 +490,7 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.printf("\tUsing block model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.printf("\tUsing background model: AUPRC between %f and %f", lowerAUC, upperAUC);
 			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 		if (true) {
@@ -493,13 +513,80 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.printf("\tUsing ideal point model: AUC between %f and %f", lowerAUC, upperAUC);
+			System.out.printf("\tUsing ideal point model: AUPRC between %f and %f", lowerAUC, upperAUC);
 			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 
 		return;
 	}
-*/
 
+	// Party Affiliation Classification Accuracy
+	public static void 
+	partyClassify (double[] p, double[] q, double[] b, Map<Integer, String> invDict) {
+		Map<String, Double> mapP = new HashMap<String, Double>();
+		Map<String, Double> mapQ = new HashMap<String, Double>();
+		for (int i = 0; i < p.length; i++) {
+			String rawID = invDict.get(i);
+			mapP.put(rawID, p[i]);
+			mapQ.put(rawID, q[i]);
+		}
+		Map<String, Double> sortedP = ArrayTools.ValueComparator.sortByValue(mapP);
+		Map<String, Double> sortedQ = ArrayTools.ValueComparator.sortByValue(mapQ);
+
+		String fileDir = "../../data/dict/merge_id_list";
+		Map<String, Integer> party = new HashMap<String, Integer>();
+		int numD = 0, numR = 0;
+		try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
+			String currentLine;
+			while ((currentLine = br.readLine()) != null) {
+				// parse line here
+				// Each Line: FullName \t rawID \t UserName \t party \n
+				String[] tokens = currentLine.split("\t");
+				String rawID = tokens[1];
+				if (tokens[3].equals("R")) {
+					party.put(rawID, 1);
+					numR += 1;
+				}
+				else if (tokens[3].equals("D")) {
+					party.put(rawID, 2);
+					numD += 1;
+				}
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("numR = " + numR + " numD = " + numD);
+
+		int count = 0; int cor = 0;
+		for (Map.Entry<String, Double> e: sortedP.entrySet()) {
+			if (count == numR) break;
+			if (party.get(e.getKey()) == 1)
+				cor += 1;
+		}
+		System.out.println("P: " + cor + " out of " + sortedP.size() + " correct, accuracy = " + (double)cor/sortedP.size());
+		count = 0; cor = 0;
+		for (Map.Entry<String, Double> e: sortedP.entrySet()) {
+			if (count == numD) break;
+			if (party.get(e.getKey()) == 2)
+				cor += 1;
+		}
+		System.out.println("P: " + cor + " out of " + sortedP.size() + " correct, accuracy = " + (double)cor/sortedP.size());
+	
+		count = 0; cor = 0;
+		for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
+			if (count == numR) break;
+			if (party.get(e.getKey()) == 1)
+				cor += 1;
+		}
+		System.out.println("Q: " + cor + " out of " + sortedQ.size() + " correct, accuracy = " + (double)cor/sortedQ.size());
+		count = 0; cor = 0;
+		for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
+			if (count == numD) break;
+			if (party.get(e.getKey()) == 2)
+				cor += 1;
+		}
+		System.out.println("Q: " + cor + " out of " + sortedQ.size() + " correct, accuracy = " + (double)cor/sortedQ.size());
+	}
 }
 

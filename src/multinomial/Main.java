@@ -14,10 +14,11 @@ import java.util.*;
 public class Main
 {
 	// Configuration
-	public static final int K = 5;					// Number of Latent Features
+	public static final int K = 2;					// Number of Latent Features
 	public static int N;						// Number of Users
 	public static final int MAX_ITER = 10;				// Maximum Number of Iterations 
 	public static SparseMatrix<Integer> trainData, testData;
+	public static SparseMatrix<Integer> trainDataNeg, testDataNeg;
 	public static Map<String, Integer> dict;
 	public static Map<Integer, String> invDict;
 
@@ -36,17 +37,21 @@ public class Main
 	public static void
 	init(String[] args) {
 		// Init
-		trainData = new SparseMatrix<Integer>();
-		dict = new HashMap<String, Integer>();
-		invDict = new HashMap<Integer, String>();
+		trainData = new SparseMatrix<Integer>(); testData = new SparseMatrix<Integer>();
+		trainDataNeg = new SparseMatrix<Integer>(); testDataNeg = new SparseMatrix<Integer>();
+		dict = new HashMap<String, Integer>(); invDict = new HashMap<Integer, String>();
 		Random rand = new Random(0);
 		// Read Data
 		String num = "3k", rel = args[0];
 		String dictDir = "../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num;
 		String trainDataDir = "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".train";
+		String testDataDir = "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".test";
+		String trainDataDirNeg = "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".train";
+		String testDataDirNeg = "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".test";
 		dict = FileParser.readVocabulary(dictDir);
 		invDict = FileParser.readInverseVocabulary(dictDir);
-		FileParser.readData(trainData, trainDataDir, dict);
+		FileParser.readData(trainData, trainDataDir, dict); FileParser.readData(testData, testDataDir, dict);
+		FileParser.readData(trainDataNeg, trainDataDirNeg, dict); FileParser.readData(testDataNeg, testDataDirNeg, dict);
 		N = dict.size();
 		// Initialize Parameters 
 		alpha = new double[K]; beta = new double[K][N]; pi = new double[N];
@@ -87,7 +92,15 @@ public class Main
 	public static void
 	test() {
 		// todo
-		Evaluation.auroc(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
+		System.out.println("Training:");
+		Evaluation.auroc(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
+		Evaluation.auprc(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
+		System.out.println("Testing:");
+		Evaluation.auroc(testData, testDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 2);
+		Evaluation.auprc(testData, testDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 2);
+
+		System.out.println("Classification:");
+		Evaluation.partyClassify(p, q, b, invDict);
 	}
 
 	// Entry
