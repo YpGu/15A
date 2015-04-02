@@ -129,7 +129,7 @@ public class MixtureUpdate
 		}
 		
 		// Update Bernoulli Parameter \varphi |Time: O(KE)|
-		double[] tmpVarphi = new double[N];					// !!! TODO: most of tmpVarphi's will be zero 
+		double[] tmpVarphi = new double[N];					// !!! TODO: most of tmpVarphi's will be zero, check why  
 		for (int i = 0; i < N; i++) {
 			double di = pi[i] / (1-pi[i] + Double.MIN_VALUE) + Double.MIN_VALUE;
 			double ss = Evaluation.sumSigma(i, p, q, b);
@@ -158,6 +158,7 @@ public class MixtureUpdate
 		// Update All
 		System.out.printf("gamma: ");
 		for (int k = 0; k < K; k++) {
+			if (resGamma[k] != resGamma[k]) System.out.println("resGamma NAN!");
 			gamma[k] = resGamma[k];						// update \gamma 
 			System.out.printf("%f\t", gamma[k]);
 		} System.out.printf("\nvarphi: ");
@@ -167,12 +168,17 @@ public class MixtureUpdate
 		for (int i = 519; i < 529; i++) {
 			System.out.printf("%f\t", resPhi[i][1]);
 		} System.out.printf("\n");
-		for (int i = 0; i < N; i++)
-			for (int k = 0; k < K; k++) 
+		for (int i = 0; i < N; i++) {
+			for (int k = 0; k < K; k++) {
+				if (resPhi[i][k] != resPhi[i][k]) System.out.println("resPhi NAN!");
 				phi[i][k] = resPhi[i][k];				// update \phi 
-		for (int i = 0; i < N; i++) 
+			}
+		}
+		for (int i = 0; i < N; i++) {
+			if (tmpVarphi[i] != tmpVarphi[i]) System.out.println("tmpVarphi NAN!");
 			varphi[i] = tmpVarphi[i];					// update \varphi 
 //			varphi[i] = 0.9;
+		}
 
 		return;
 	}
