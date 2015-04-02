@@ -525,7 +525,10 @@ public class Evaluation
 			}
 		}
 
-		averV /= N; averV1 /= N; averV2 /= N;
+		if (WEIGHTED)
+			{ averV /= N; averV1 /= N; averV2 /= N; }
+		else
+			{ averV /= posData.getSize(); averV1 /= posData.getSize(); averV2 /= posData.getSize(); }
 		System.out.println("\taverV = " + averV);
 		System.out.println("\taverV1 = " + averV1);
 		System.out.println("\taverV2 = " + averV2);
@@ -961,7 +964,10 @@ public class Evaluation
 			}
 		}
 
-		averV /= N; averV1 /= N; averV2 /= N;
+		if (WEIGHTED)
+			{ averV /= N; averV1 /= N; averV2 /= N; }
+		else
+			{ averV /= posData.getSize(); averV1 /= posData.getSize(); averV2 /= posData.getSize(); }
 		System.out.println("\taverV = " + averV);
 		System.out.println("\taverV1 = " + averV1);
 		System.out.println("\taverV2 = " + averV2);

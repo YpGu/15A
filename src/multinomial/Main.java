@@ -14,9 +14,9 @@ import java.util.*;
 public class Main
 {
 	// Configuration
-	public static final int K = 50;					// Number of Latent Features
+	public static final int K = 5;					// Number of Latent Features
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 10;				// Maximum Number of Iterations 
 	public static SparseMatrix<Integer> trainData, testData;
 	public static SparseMatrix<Integer> trainDataNeg, testDataNeg;
 	public static Map<String, Integer> dict;
@@ -58,7 +58,15 @@ public class Main
 		p = new double[N]; q = new double[N]; b = new double[N];
 		gamma = new double[K]; phi = new double[N][K]; varphi = new double[N];
 		for (int k = 0; k < K; k++) alpha[k] = 2;
-		for (int k = 0; k < K; k++) for (int j = 0; j < N; j++) beta[k][j] = 1/(double)N;
+		for (int k = 0; k < K; k++) {
+			double sumBeta = 0;
+			for (int j = 0; j < N; j++) {
+				beta[k][j] = rand.nextDouble() + 1;			// !!! beta must not be initialized uniformly
+				sumBeta += beta[k][j];
+			}
+			for (int j = 0; j < N; j++) 
+				beta[k][j] /= sumBeta;
+		}
 		for (int i = 0; i < N; i++)
 			for (int k = 0; k < K; k++)
 				phi[i][k] = 1/(double)K;
@@ -95,12 +103,19 @@ public class Main
 	public static void
 	test() {
 		// todo
-		System.out.println("Training:");
+		System.out.println("Training (all):");
 		Evaluation.auroc(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
 		Evaluation.auprc(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
-		System.out.println("Testing:");
+		System.out.println("Testing (all):");
 		Evaluation.auroc(testData, testDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 2);
 		Evaluation.auprc(testData, testDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 2);
+
+		System.out.println("Training (aver):");
+		Evaluation.auroc2(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
+		Evaluation.auprc2(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
+		System.out.println("Testing (aver):");
+		Evaluation.auroc2(testData, testDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 2);
+		Evaluation.auprc2(testData, testDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 2);
 
 		System.out.println("Classification:");
 		Evaluation.partyClassify(p, q, b, invDict);
