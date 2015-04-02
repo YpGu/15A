@@ -124,8 +124,18 @@ public class MixtureUpdate
 			double ss = Evaluation.sumSigma(i, p, q, b);
 			for (int j: trainData.getRow(i)) {
 				double v = Math.exp(p[i] * q[j] + b[j]) / ss;
-				for (int k = 0; k < K; k++)
+
+//				Scanner sc = new Scanner(System.in);
+//				System.out.println("sigma = " + v);
+
+				for (int k = 0; k < K; k++) {
+//					System.out.println("beta = " + beta[k][j] + " phi = " + phi[i][k]);
 					v /= Math.pow(beta[k][j], phi[i][k]);
+				}
+
+//				System.out.println("v = " + v + "\n");
+//				int gu = sc.nextInt();
+
 				di *= Math.pow(v, trainData.get(i, j));
 			}
 			if (Double.isInfinite(di))

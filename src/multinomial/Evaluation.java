@@ -556,37 +556,49 @@ public class Evaluation
 		catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("numR = " + numR + " numD = " + numD);
+		System.out.println("\tnumR = " + numR + " numD = " + numD);
 
 		int count = 0; int cor = 0;
 		for (Map.Entry<String, Double> e: sortedP.entrySet()) {
 			if (count == numR) break;
-			if (party.get(e.getKey()) == 1)
-				cor += 1;
+			try {
+				if (party.get(e.getKey()) == 1)
+					cor += 1;
+			}
+			catch (java.lang.NullPointerException f) {} 
 		}
-		System.out.println("P: " + cor + " out of " + sortedP.size() + " correct, accuracy = " + (double)cor/sortedP.size());
+		System.out.println("\tP: " + cor + " correct, accuracy = " + (double)cor/(numD+numR));
 		count = 0; cor = 0;
 		for (Map.Entry<String, Double> e: sortedP.entrySet()) {
 			if (count == numD) break;
-			if (party.get(e.getKey()) == 2)
-				cor += 1;
+			try {
+				if (party.get(e.getKey()) == 2)
+					cor += 1;
+			}
+			catch (java.lang.NullPointerException f) {} 
 		}
-		System.out.println("P: " + cor + " out of " + sortedP.size() + " correct, accuracy = " + (double)cor/sortedP.size());
+		System.out.println("\tP: " + cor + " correct, accuracy = " + (double)cor/(numD+numR));
 	
 		count = 0; cor = 0;
 		for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
 			if (count == numR) break;
-			if (party.get(e.getKey()) == 1)
-				cor += 1;
+			try {
+				if (party.get(e.getKey()) == 1)
+					cor += 1;
+			}
+			catch (java.lang.NullPointerException f) {} 
 		}
-		System.out.println("Q: " + cor + " out of " + sortedQ.size() + " correct, accuracy = " + (double)cor/sortedQ.size());
+		System.out.println("\tQ: " + cor + " correct, accuracy = " + (double)cor/(numD+numR));
 		count = 0; cor = 0;
 		for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
 			if (count == numD) break;
-			if (party.get(e.getKey()) == 2)
-				cor += 1;
+			try {
+				if (party.get(e.getKey()) == 2)
+					cor += 1;
+			}
+			catch (java.lang.NullPointerException f) {} 
 		}
-		System.out.println("Q: " + cor + " out of " + sortedQ.size() + " correct, accuracy = " + (double)cor/sortedQ.size());
+		System.out.println("\tQ: " + cor + " correct, accuracy = " + (double)cor/(numD+numR));
 	}
 }
 
