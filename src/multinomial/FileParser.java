@@ -37,7 +37,7 @@ public class FileParser
 		return;
 	}
 
-
+	// Read Vocabulary: String -> Integer
 	public static Map<String, Integer>
 	readVocabulary(String fileDir) {
 		Map<String, Integer> res = new HashMap<String, Integer>();
@@ -58,6 +58,26 @@ public class FileParser
 		return res;
 	}
 
+	// Read Inverse Vocabulary: Integer -> String
+	public static Map<Integer, String>
+	readInverseVocabulary(String fileDir) {
+		Map<Integer, String> res = new HashMap<Integer, String>();
+		int lineID = 0;
+		try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
+			String currentLine;
+			// Each Line: <newID> \t <rawID> \n 
+			while ((currentLine = br.readLine()) != null) {
+				String rawID = currentLine.split("\t")[1];
+				res.put(lineID, rawID);
+				lineID += 1;
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return res;
+	}
 
 	/// write to file
 	public static void
@@ -131,11 +151,12 @@ public class FileParser
 	public static void
 	output(
 		String fileDir,
-		double[] arr
+		double[] arr,
+		Map<Integer, String> voc
 	) {
 		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileDir)))) {
 			for (int i = 0; i < arr.length; i++) {
-				writer.printf("%f\n", arr[i]);
+				writer.printf("%s\t%f\n", voc.get(i), arr[i]);
 			}
 		}
 		catch (IOException e) {

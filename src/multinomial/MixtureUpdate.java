@@ -148,8 +148,7 @@ public class MixtureUpdate
 				phi[i][k] = resPhi[i][k];
 		for (int i = 0; i < N; i++) 
 			varphi[i] = tmpVarphi[i];
-//			varphi[i] = 0.5;
-		FileParser.output("./varphi", varphi);
+//			varphi[i] = 0.9;
 
 		return;
 	}
@@ -207,9 +206,9 @@ public class MixtureUpdate
 			q[i] += lr * gradQ[i];
 			b[i] += lr * gradB[i];
 		}
-		FileParser.output("./p", p);
-		FileParser.output("./q", q);
-		FileParser.output("./b", b);
+//		FileParser.output("./p", p);
+//		FileParser.output("./q", q);
+//		FileParser.output("./b", b);
 
 		return;
 	}

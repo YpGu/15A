@@ -16,9 +16,10 @@ public class Main
 	// Configuration
 	public static final int K = 5;					// Number of Latent Features
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 10;				// Maximum Number of Iterations 
 	public static SparseMatrix<Integer> trainData, testData;
 	public static Map<String, Integer> dict;
+	public static Map<Integer, String> invDict;
 
 	// Model Parameters
 	public static double[] alpha;					// K * 1
@@ -37,12 +38,14 @@ public class Main
 		// Init
 		trainData = new SparseMatrix<Integer>();
 		dict = new HashMap<String, Integer>();
+		invDict = new HashMap<Integer, String>();
 		Random rand = new Random(0);
 		// Read Data
 		String num = "3k", rel = args[0];
 		String dictDir = "../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num;
 		String trainDataDir = "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".train";
 		dict = FileParser.readVocabulary(dictDir);
+		invDict = FileParser.readInverseVocabulary(dictDir);
 		FileParser.readData(trainData, trainDataDir, dict);
 		N = dict.size();
 		// Initialize Parameters 
@@ -73,6 +76,9 @@ public class Main
 			System.out.println("----- Iteration " + iter + " -----");
 			MixtureUpdate.update(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi);
 		}
+		FileParser.output("./p", p, invDict);
+		FileParser.output("./q", q, invDict);
+		FileParser.output("./b", b, invDict);
 
 		return;
 	}
@@ -81,6 +87,7 @@ public class Main
 	public static void
 	test() {
 		// todo
+		Evaluation.auroc(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
 	}
 
 	// Entry
