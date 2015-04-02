@@ -100,9 +100,8 @@ public class FileParser
 			for (Map.Entry<String, double[]> e: arr.entrySet()) {
 				writer.printf("%s", e.getKey());
 				double[] vs = e.getValue();
-				for (double v: vs) {
+				for (double v: vs) 
 					writer.printf("\t%f", v);
-				}
 				writer.printf("\n");
 			}
 		}
@@ -129,27 +128,18 @@ public class FileParser
 		}
 	}
 
-/*	// read number of nodes 
-	public static int
-	readNumOfInstances(
-		String fileDir, 
-		String dictDir, 
-		String delimiter
+	public static void
+	output(
+		String fileDir,
+		double[] arr
 	) {
-		try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
-			String currentLine;
-			while ((currentLine = br.readLine()) != null) {
-				// parse line here
-				String[] tokens = currentLine.split("\t");
-				int index = Integer.parseInt(tokens[0].trim());
-				String oriNum = tokens[1];
-				map.put(oriNum, index);
+		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileDir)))) {
+			for (int i = 0; i < arr.length; i++) {
+				writer.printf("%f\n", arr[i]);
 			}
 		}
 		catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-*/		
-
 }

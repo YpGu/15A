@@ -1,5 +1,5 @@
 /**
-	Evaluation.java: evaluate and objective function calculator.
+	Evaluation.java: Evaluation and Calculator.
 **/
 
 import java.util.*;
@@ -7,19 +7,53 @@ import java.lang.*;
 
 public class Evaluation
 {
-	/// logistic (sigmond) function
+	// Logistic Function
 	public static double logis(double x) {
-		if (x > 100) {
-			return 1;
-		}
-		else {
-			return Math.pow(Math.E, x) / (1 + Math.pow(Math.E, x));
-		}
+		double v = 1;
+		if (x < 100)
+			v = 1 - 1 / (1 + Math.exp(x));
+		return v;
 	}
 
+	// Calculate \sigma_{ij} 
+	public static double sigma(int i, int j, double[] p, double[] q, double[] b) {
+		double res = 0;
+		for (int l = 0; l < p.length; l++) {
+			double power = p[i] * q[l] + b[l] - p[i] * q[j] - b[j];
+			if (power < 100) res += Math.exp(power);
+			else return 0;
+		}
+		return res;
+	}
 
-	/// Magic. Do not touch. 
-	/// calculate the derivative of log-gamma (digamma) function 
+	// Calculate Sum: \sum_{l} { exp(p_i * q_l + b_l) }
+	public static double sumSigma(int i, double[] p, double[] q, double[] b) {
+		double res = 0;
+		for (int l = 0; l < p.length; l++) {
+			double power = p[i] * q[l] + b[l];
+			res += Math.exp(power);
+		}
+		return res;
+	}
+
+	// Calculate Weighted Sum: \sum_{l} { q_l * exp(p_i * q_l + b_l) }
+	public static double sumSigmaWeighted(int i, double[] p, double[] q, double[] b) {
+		double res = 0;
+		for (int l = 0; l < p.length; l++) {
+			double power = p[i] * q[l] + b[l];
+			res += q[l] * Math.exp(power);
+		}
+		return res;
+	}
+
+	// Input: log(a) and log(b); Output: log(a+b)
+	public static double logSum(double logA, double logB) {
+ 		if (logA < logB) return logB + Math.log(1 + Math.exp(logA-logB));
+		else return logA + Math.log(1 + Math.exp(logB-logA));
+	}
+
+	// Magic. Do not touch. 
+	// Calculate the Derivative of log-Gamma (Digamma) Function 
 	public static double dLogGamma(double x) {
 		if (x == 0) return Math.pow(10,-9);
 		double dtmp = (x - 0.5) / (x + 4.5) + Math.log(x + 4.5) - 1;
@@ -39,19 +73,27 @@ public class Evaluation
 		return res;
 	}
 
-
-	/// calculate the expectation of log(\pi) w.r.t. q
-	public static double
-	expt(Map<String, double[]> gamma, String p, int k) {
-		double v1 = gamma.get(p)[k];
-//		double v2 = 0;
-//		for (double v: gamma.get(p)) {
-//			v2 += v;
-//		}
-		double v2 = gamma.get(p)[gamma.get(p).length-1];
-
-		return dLogGamma(v1)-dLogGamma(v2);
+	public static double calcLikelihood(
+		SparseMatrix<Integer> data,
+		double[] alpha,	double[][] beta, double[] pi,
+		double[] p, double[] q, double[] b,
+		double[] gamma, double[][] phi, double[] varphi
+	) {
+		int K = alpha.length, N = p.length;
+		double res = 0;
+		for (int i = 0; i < N; i++) {
+			double ss = Evaluation.sumSigma(i, p, q, b);
+			for (int j: data.getRow(i)) {
+				double p1 = 0;
+				for (int k = 0; k < K; k++) 
+					p1 += phi[i][k] * beta[k][j];
+				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				// n(i,j) * log p(i,j) = n(i,j) * log{ (1-pi) * \sum_k{theta_{ik} * beta_{kj}} + pi * sigma(i,j) } 
+				// \theta ~~ \phi (variational) 
+				res += data.get(i, j) * Math.log( (1-pi[i]) * p1 + pi[i] * p2 + Double.MIN_VALUE );
+			}
+		}
+		return res;
 	}
-
 }
 

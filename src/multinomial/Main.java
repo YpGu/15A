@@ -31,11 +31,6 @@ public class Main
 	public static double[][] phi;					// N * K
 	public static double[] varphi;					// N * 1
 
-	// latent Variables
-//	public static double[] theta;					// K * 1
-//	public static double[] lambda;					// N * 1
-//	public static double[] z;					// K * 1
-
 	// Initialization and Read Data 
 	public static void
 	init(String[] args) {
@@ -50,20 +45,25 @@ public class Main
 		dict = FileParser.readVocabulary(dictDir);
 		FileParser.readData(trainData, trainDataDir, dict);
 		N = dict.size();
-		// Init
+		// Initialize Parameters 
 		alpha = new double[K]; beta = new double[K][N]; pi = new double[N];
 		p = new double[N]; q = new double[N]; b = new double[N];
 		gamma = new double[K]; phi = new double[N][K]; varphi = new double[N];
-//		theta = new double[K]; lambda = new double[N]; z = new double[K];
 		for (int k = 0; k < K; k++) alpha[k] = 2;
 		for (int k = 0; k < K; k++) for (int j = 0; j < N; j++) beta[k][j] = 1/(double)N;
-		for (int i = 0; i < N; i++) pi[i] = 0.5;
 		for (int i = 0; i < N; i++) {
-			p[i] = rand.nextDouble() - 0.5;
-			q[i] = rand.nextDouble() - 0.5;
-			b[i] = rand.nextDouble() - 0.5;
+			pi[i] = 0.4 + 0.2 * rand.nextDouble();
+			varphi[i] = pi[i];
 		}
-		for (int i = 0; i < N; i++) varphi[i] = 0.5;
+		for (int i = 0; i < N; i++) {
+			double pqRange = 5;
+			p[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
+			q[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
+			b[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
+		}
+		for (int k = 0; k < k; k++) {
+			gamma[k] = alpha[k] + (double)N/K;
+		}
 	}
 
 	// Train
