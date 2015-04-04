@@ -36,7 +36,8 @@ public class MixtureUpdate
 	}
 
 	// Estimate Variational Parameters using EM 
-	public static void
+	// Return phi? because phi is associated with every hub user 
+	public static double[][]
 	variationEM(
 		SparseMatrix<Integer> trainData,
 		double[] alpha,	double[][] beta, double[] pi,
