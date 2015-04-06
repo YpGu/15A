@@ -22,7 +22,8 @@ public class Evaluation
 	public static double sumSigma(int i, double[] p, double[] q, double[] b) {
 		double res = 0;
 		for (int l = 0; l < p.length; l++) {
-			double power = p[i] * q[l] + b[l];
+//			double power = p[i] * q[l] + b[l];
+			double power = p[i] * q[l];
 			res += Math.exp(power);
 		}
 		return res;
@@ -32,7 +33,8 @@ public class Evaluation
 	public static double sumSigmaWeighted(int i, double[] p, double[] q, double[] b) {
 		double res = 0;
 		for (int l = 0; l < p.length; l++) {
-			double power = p[i] * q[l] + b[l];
+//			double power = p[i] * q[l] + b[l];
+			double power = p[i] * q[l];
 			res += q[l] * Math.exp(power);
 		}
 		return res;
@@ -81,7 +83,7 @@ public class Evaluation
 		double[] p, double[] q, double[] b,
 		double[] gamma, Map<Integer, double[][]> allPhi, double[] varphi
 	) {
-		int K = alpha.length, N = p.length, i = userIndex, m = 0;
+		int K = alpha.length, N = p.length, i = userIndex;
 		double sumAlpha = 0, sumGamma = 0;
 		double[][] phi = allPhi.get(i);
 		double res = 0;
@@ -95,6 +97,7 @@ public class Evaluation
 			res -= logGamma(alpha[k]);
 			res += logGamma(gamma[k]);
 			res += (alpha[k]-gamma[k]) * (dLogGamma(gamma[k]) - dLogGamma(sumGamma));
+			int m = 0;
 			for (int j: data.getRow(i)) {
 				if (phi[m][k] > 0) {
 					res += phi[m][k] * (dLogGamma(gamma[k]) - dLogGamma(sumGamma) - Math.log(phi[m][k])

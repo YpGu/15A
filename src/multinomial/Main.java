@@ -77,7 +77,7 @@ public class Main
 			varphi[i] = pi[i];
 		}
 		for (int i = 0; i < N; i++) {
-			double pqRange = 5;
+			double pqRange = 6;
 			p[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
 			q[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
 			b[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
@@ -93,10 +93,11 @@ public class Main
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("----- Iteration " + iter + " -----");
 			MixtureUpdate.update(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi);
+
+			FileParser.output("./param/p", p, invDict);
+			FileParser.output("./param/q", q, invDict);
+			FileParser.output("./param/b", b, invDict);
 		}
-		FileParser.output("./param/p", p, invDict);
-		FileParser.output("./param/q", q, invDict);
-		FileParser.output("./param/b", b, invDict);
 
 		return;
 	}
