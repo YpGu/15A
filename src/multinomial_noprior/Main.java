@@ -16,22 +16,16 @@ public class Main
 	// Configuration
 	public static final int K = 10;					// Number of Latent Features
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 10;				// Maximum Number of Iterations 
 	public static SparseMatrix<Integer> trainData, testData;
 	public static SparseMatrix<Integer> trainDataNeg, testDataNeg;
 	public static Map<String, Integer> dict;
 	public static Map<Integer, String> invDict;
 
 	// Model Parameters
-	public static double[] alpha;					// K * 1
-	public static double[][] beta;					// K * N
 	public static double[] pi;					// N * 1
 	public static double[] p, q, b;					// N * 1
-
-	// Variational Parameters
-	public static double[] gamma;					// K * 1
-	public static Map<Integer, double[][]> phi;			// (for every i:) M * K
-	public static double[] varphi;					// N * 1
+	public static double[][] theta, beta;				// N * K; K * N 
 
 	// Initialization and Read Data 
 	public static void
@@ -54,36 +48,35 @@ public class Main
 		FileParser.readData(trainDataNeg, trainDataDirNeg, dict); FileParser.readData(testDataNeg, testDataDirNeg, dict);
 		N = dict.size();
 		// Initialize Parameters 
-		alpha = new double[K]; beta = new double[K][N]; pi = new double[N];
+		pi = new double[N];
 		p = new double[N]; q = new double[N]; b = new double[N];
-		gamma = new double[K]; phi = new HashMap<Integer, double[][]>(); varphi = new double[N];
-		for (int k = 0; k < K; k++) alpha[k] = 2;
+		theta = new double[N][K]; beta = new double[K][N];
+		for (int i = 0; i < N; i++) {
+			pi[i] = 0.4 + 0.2 * rand.nextDouble();
+		}
+		for (int i = 0; i < N; i++) {
+			double sumTheta = 0;
+			for (int k = 0; k < K; k++) {
+				theta[i][k] = rand.nextDouble() + 1;
+				sumTheta += theta[i][k];
+			}
+			for (int k = 0; k < K; k++)
+				theta[i][k] /= sumTheta;
+		}
 		for (int k = 0; k < K; k++) {
 			double sumBeta = 0;
 			for (int j = 0; j < N; j++) {
-				beta[k][j] = rand.nextDouble() + 1;	// !!! beta must not be initialized uniformly
+				beta[k][j] = rand.nextDouble() + 1;
 				sumBeta += beta[k][j];
 			}
 			for (int j = 0; j < N; j++) 
 				beta[k][j] /= sumBeta;
 		}
 		for (int i = 0; i < N; i++) {
-			int M = trainData.getRow(i).size();
-			double[][] lPhi = new double[M][K];
-			phi.put(i, lPhi);
-		}
-		for (int i = 0; i < N; i++) {
-			pi[i] = 0.4 + 0.2 * rand.nextDouble();
-			varphi[i] = pi[i];
-		}
-		for (int i = 0; i < N; i++) {
 			double pqRange = 6;
 			p[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
 			q[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
 			b[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
-		}
-		for (int k = 0; k < k; k++) {
-			gamma[k] = alpha[k] + (double)N/K;
 		}
 	}
 
@@ -92,7 +85,7 @@ public class Main
 	train() {
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("----- Iteration " + iter + " -----");
-			MixtureUpdate.update(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi);
+			Update.update(trainData, pi, theta, beta, p, q, b);
 
 			FileParser.output("./param/p", p, invDict);
 			FileParser.output("./param/q", q, invDict);
@@ -105,25 +98,24 @@ public class Main
 	// Test
 	public static void
 	test() {
-/*
 		// todo
 		System.out.println("Training (all):");
-		Evaluation.auroc(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
-		Evaluation.auprc(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
-		System.out.println("Testing (all):");
-		Evaluation.auroc(testData, testDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 2);
-		Evaluation.auprc(testData, testDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 2);
+		Evaluation.auroc(trainData, trainDataNeg, pi, theta, beta, p, q, b, 1);
+		Evaluation.auprc(trainData, trainDataNeg, pi, theta, beta, p, q, b, 1);
 
-		System.out.println("Training (aver):");
+		System.out.println("Testing (all):");
+		Evaluation.auroc(testData, testDataNeg, pi, theta, beta, p, q, b, 1);
+		Evaluation.auprc(testData, testDataNeg, pi, theta, beta, p, q, b, 1);
+
+/*		System.out.println("Training (aver):");
 		Evaluation.auroc2(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
 		Evaluation.auprc2(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
 		System.out.println("Testing (aver):");
 		Evaluation.auroc2(testData, testDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 2);
 		Evaluation.auprc2(testData, testDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 2);
-
+*/
 		System.out.println("Classification:");
 		Evaluation.partyClassify(p, q, b, invDict);
-*/
 	}
 
 	// Entry

@@ -38,6 +38,9 @@ public class Update
 		IdealPointInference.update(trainData, pi, p, q, b);
 		BackgroundInference.update(trainData, pi, theta, beta);
 
+		double l = Evaluation.calcLikelihood(trainData, pi, theta, beta, p, q, b);
+		System.out.println("logL (lower bound) = " + l);
+
 		return;
 	}
 }

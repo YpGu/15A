@@ -22,8 +22,8 @@ public class Evaluation
 	public static double sumSigma(int i, double[] p, double[] q, double[] b) {
 		double res = 0;
 		for (int l = 0; l < p.length; l++) {
-//			double power = p[i] * q[l] + b[l];
-			double power = p[i] * q[l];
+			double power = p[i] * q[l] + b[l];
+//			double power = p[i] * q[l];
 			res += Math.exp(power);
 		}
 		return res;
@@ -33,8 +33,8 @@ public class Evaluation
 	public static double sumSigmaWeighted(int i, double[] p, double[] q, double[] b) {
 		double res = 0;
 		for (int l = 0; l < p.length; l++) {
-//			double power = p[i] * q[l] + b[l];
-			double power = p[i] * q[l];
+			double power = p[i] * q[l] + b[l];
+//			double power = p[i] * q[l];
 			res += q[l] * Math.exp(power);
 		}
 		return res;
@@ -75,41 +75,28 @@ public class Evaluation
 		return res;
 	}
 
-	// This is the <Lower Bound> of the log-Likelihood of User-Count Vector for User i 
+	// This is the <Lower Bound> of the log-Likelihood 
 	public static double calcLikelihood(
 		SparseMatrix<Integer> data,
-		int userIndex,
-		double[] alpha,	double[][] beta, double[] pi,
-		double[] p, double[] q, double[] b,
-		double[] gamma, Map<Integer, double[][]> allPhi, double[] varphi
+		double[] pi,
+		double[][] theta, double[][] beta,
+		double[] p, double[] q, double[] b
 	) {
-		int K = alpha.length, N = p.length, i = userIndex;
-		double sumAlpha = 0, sumGamma = 0;
-		double[][] phi = allPhi.get(i);
-		double res = 0;
-		for (int k = 0; k < K; k++) {
-			sumAlpha += alpha[k];
-			sumGamma += alpha[k];
-		}
+		int K = beta.length, N = p.length;
 
-		res = logGamma(sumAlpha) - logGamma(sumGamma);
-		for (int k = 0; k < K; k++) {
-			res -= logGamma(alpha[k]);
-			res += logGamma(gamma[k]);
-			res += (alpha[k]-gamma[k]) * (dLogGamma(gamma[k]) - dLogGamma(sumGamma));
-			int m = 0;
+		double res = 0;
+		for (int i: data.getXDict()) {
+			double ss = sumSigma(i, p, q, b);
 			for (int j: data.getRow(i)) {
-				if (phi[m][k] > 0) {
-					res += phi[m][k] * (dLogGamma(gamma[k]) - dLogGamma(sumGamma) - Math.log(phi[m][k])
-						+ data.get(i,j) * (1-varphi[i]) * Math.log(beta[k][j] + Double.MIN_VALUE));
-				}
-				m += 1;
+				double p1 = 0;
+				for (int k = 0; k < K; k++) 
+					p1 += theta[i][k] * beta[k][j];
+				p1 = Math.log(p1 + Double.MIN_VALUE);
+				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;		// \sigma_{ij} 
+				p2 = Math.log(p2 + Double.MIN_VALUE);
+				double prob = (1-pi[i]) * p1 + pi[i] * p2;
+				res += data.get(i,j) * prob;
 			}
-		}
-		double ss = sumSigma(i, p, q, b);
-		for (int j: data.getRow(i)) {
-			double sg = Math.exp(p[i] * q[j] + b[j]) / ss;		// \sigma_{ij} 
-			res += data.get(i,j) * varphi[i] * sg;
 		}
 
 		return res;
@@ -119,12 +106,12 @@ public class Evaluation
 	public static void 
 	auroc(
 		SparseMatrix<Integer> posData, SparseMatrix<Integer> negData,
-		double[] alpha,	double[][] beta, double[] pi,
+		double[] pi,
+		double[][] theta, double[][] beta,
 		double[] p, double[] q, double[] b,
-		double[] gamma, double[][] phi, double[] varphi,
 		int type
 	) {
-		int K = alpha.length, N = p.length;
+		int K = beta.length, N = p.length;
 
 		Map<Integer, Double> recProbs = new HashMap<Integer, Double>();
 		Map<Integer, Double> recProbs1 = new HashMap<Integer, Double>();
@@ -135,35 +122,25 @@ public class Evaluation
 		int tupleID = 0;
 		for (int i = 0; i < N; i++) {
 			double ss = sumSigma(i, p, q, b);
-			Set<Integer> s = posData.getRow(i);
-//			for (int j = 0; j < N; j++) {
-			for (int j: s) {
+			for (int j: posData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
-					p1 += phi[i][k] * beta[k][j];
+					p1 += theta[i][k] * beta[k][j];
 				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
 				recProbs2.put(tupleID, p2);
-
-//				if (s.contains(j)) {
-					posGroundTruth.add(tupleID);
-//				}
-//				else if (j != i) {
-//					negGroundTruth.add(tupleID);
-//				}
-
+				posGroundTruth.add(tupleID);
 				tupleID += 1;
 			}
 		}
 		for (int i = 0; i < N; i++) {
 			double ss = sumSigma(i, p, q, b);
-			Set<Integer> s = negData.getRow(i);
-			for (int j: s) {
+			for (int j: negData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
-					p1 += phi[i][k] * beta[k][j];
+					p1 += theta[i][k] * beta[k][j];
 				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
@@ -338,12 +315,12 @@ public class Evaluation
 	public static void 
 	auroc2(
 		SparseMatrix<Integer> posData, SparseMatrix<Integer> negData,
-		double[] alpha,	double[][] beta, double[] pi,
+		double[] pi,
+		double[][] theta, double[][] beta,
 		double[] p, double[] q, double[] b,
-		double[] gamma, double[][] phi, double[] varphi,
 		int type
 	) {
-		int K = alpha.length, N = p.length;
+		int K = beta.length, N = p.length;
 		double averV = 0, averV1 = 0, averV2 = 0;
 
 		for (int i = 0; i < N; i++) {
@@ -355,11 +332,10 @@ public class Evaluation
 			Set<Integer> negGroundTruth = new HashSet<Integer>();
 
 			double ss = sumSigma(i, p, q, b);
-			Set<Integer> s = posData.getRow(i);
-			for (int j: s) {
+			for (int j: posData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
-					p1 += phi[i][k] * beta[k][j];
+					p1 += theta[i][k] * beta[k][j];
 				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
@@ -368,11 +344,10 @@ public class Evaluation
 				posGroundTruth.add(tupleID);
 				tupleID += 1;
 			}
-			s = negData.getRow(i);
-			for (int j: s) {
+			for (int j: negData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
-					p1 += phi[i][k] * beta[k][j];
+					p1 += theta[i][k] * beta[k][j];
 				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
@@ -568,12 +543,12 @@ public class Evaluation
 	public static void 
 	auprc(
 		SparseMatrix<Integer> posData, SparseMatrix<Integer> negData,
-		double[] alpha,	double[][] beta, double[] pi,
+		double[] pi,
+		double[][] theta, double[][] beta,
 		double[] p, double[] q, double[] b,
-		double[] gamma, double[][] phi, double[] varphi,
 		int type
 	) {
-		int K = alpha.length, N = p.length;
+		int K = beta.length, N = p.length;
 
 		Map<Integer, Double> recProbs = new HashMap<Integer, Double>();
 		Map<Integer, Double> recProbs1 = new HashMap<Integer, Double>();
@@ -584,35 +559,25 @@ public class Evaluation
 		int tupleID = 0;
 		for (int i = 0; i < N; i++) {
 			double ss = sumSigma(i, p, q, b);
-			Set<Integer> s = posData.getRow(i);
-//			for (int j = 0; j < N; j++) {
-			for (int j: s) {
+			for (int j: posData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
-					p1 += phi[i][k] * beta[k][j];
+					p1 += theta[i][k] * beta[k][j];
 				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
 				recProbs2.put(tupleID, p2);
-
-//				if (s.contains(j)) {
-					posGroundTruth.add(tupleID);
-//				}
-//				else if (j != i) {
-//					negGroundTruth.add(tupleID);
-//				}
-
+				posGroundTruth.add(tupleID);
 				tupleID += 1;
 			}
 		}
 		for (int i = 0; i < N; i++) {
 			double ss = sumSigma(i, p, q, b);
-			Set<Integer> s = negData.getRow(i);
-			for (int j: s) {
+			for (int j: negData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
-					p1 += phi[i][k] * beta[k][j];
+					p1 += theta[i][k] * beta[k][j];
 				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);

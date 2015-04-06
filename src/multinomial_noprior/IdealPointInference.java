@@ -8,6 +8,7 @@ public class IdealPointInference
 {
 	// Learning Rate
 	public static final double lr = 0.001;
+	public static final int MAX_ITER = 1;
 
 	// Update Model Parameters using Gradient Ascent (after Variational Inference for all users) 
 	public static void
@@ -19,7 +20,7 @@ public class IdealPointInference
 		int N = p.length;
 
 		// Update p, q, b - O(E) 
-		for (int iter = 0; iter < 10; iter++) {
+		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("*** Updating pqb " + iter + " ***");
 			double[] gradP = new double[N], gradQ = new double[N], gradB = new double[N];
 			for (int i = 0; i < N; i++) {
