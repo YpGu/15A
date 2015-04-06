@@ -3,9 +3,13 @@
 
 	Mixture.java: implement the unified model with two multinomial mixtures
 
-	The first mixture is background
-	The second mixture is ideal point
+	The first mixture is background;
+	The second mixture is ideal point;
 
+	If we want to build the model purely based on background, set USE_BKG to true and USE_IPM to false;
+	If we want to build the model purely based on ideal point, set USE_BKG to false and USE_IPM to true
+
+	If we want to use the bias term in ideal point model, set USEB to true; otherwise, set USEB to false
 
 **/
 
@@ -16,7 +20,11 @@ public class Main
 	// Configuration
 	public static final int K = 10;					// Number of Latent Features
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 10;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 200;				// Maximum Number of Iterations 
+	public static final boolean USE_BKG = true;
+	public static final boolean USE_IPM = true;
+	public static final boolean USEB = true;			// true if we use p[i]*q[j]+b[j]; fase if we use p[i]*q[j] 
+
 	public static SparseMatrix<Integer> trainData, testData;
 	public static SparseMatrix<Integer> trainDataNeg, testDataNeg;
 	public static Map<String, Integer> dict;
@@ -51,9 +59,16 @@ public class Main
 		pi = new double[N];
 		p = new double[N]; q = new double[N]; b = new double[N];
 		theta = new double[N][K]; beta = new double[K][N];
-		for (int i = 0; i < N; i++) {
-			pi[i] = 0.4 + 0.2 * rand.nextDouble();
-		}
+		if (!USE_BKG && USE_IPM) 				// IPM only
+			for (int i = 0; i < N; i++) 
+				pi[i] = 1;
+		if (!USE_IPM && USE_BKG)				// BKG only
+			for (int i = 0; i < N; i++)
+				pi[i] = 0;
+		if (USE_BKG && USE_IPM)					// both
+			for (int i = 0; i < N; i++) 
+				pi[i] = 0.4 + 0.2 * rand.nextDouble();
+
 		for (int i = 0; i < N; i++) {
 			double sumTheta = 0;
 			for (int k = 0; k < K; k++) {
@@ -76,7 +91,7 @@ public class Main
 			double pqRange = 6;
 			p[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
 			q[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
-			b[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
+			b[i] = -0.5 + rand.nextDouble();
 		}
 	}
 
@@ -85,12 +100,14 @@ public class Main
 	train() {
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("----- Iteration " + iter + " -----");
-			Update.update(trainData, pi, theta, beta, p, q, b);
+			Update.update(trainData, pi, theta, beta, p, q, b, USE_BKG, USE_IPM, iter);
 
 			FileParser.output("./param/p", p, invDict);
 			FileParser.output("./param/q", q, invDict);
 			FileParser.output("./param/b", b, invDict);
+			FileParser.output("./param/pi", pi, invDict);
 		}
+
 
 		return;
 	}

@@ -22,9 +22,14 @@ public class Evaluation
 	public static double sumSigma(int i, double[] p, double[] q, double[] b) {
 		double res = 0;
 		for (int l = 0; l < p.length; l++) {
-			double power = p[i] * q[l] + b[l];
-//			double power = p[i] * q[l];
-			res += Math.exp(power);
+			if (Main.USEB) {
+				double power = p[i] * q[l] + b[l];
+				res += Math.exp(power);
+			}
+			else {
+				double power = p[i] * q[l];
+				res += Math.exp(power);
+			}
 		}
 		return res;
 	}
@@ -33,9 +38,14 @@ public class Evaluation
 	public static double sumSigmaWeighted(int i, double[] p, double[] q, double[] b) {
 		double res = 0;
 		for (int l = 0; l < p.length; l++) {
-			double power = p[i] * q[l] + b[l];
-//			double power = p[i] * q[l];
-			res += q[l] * Math.exp(power);
+			if (Main.USEB) {
+				double power = p[i] * q[l] + b[l];
+				res += q[l] * Math.exp(power);
+			}
+			else {
+				double power = p[i] * q[l];
+				res += q[l] * Math.exp(power);
+			}
 		}
 		return res;
 	}
@@ -92,7 +102,11 @@ public class Evaluation
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
 				p1 = Math.log(p1 + Double.MIN_VALUE);
-				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;		// \sigma_{ij} 
+				double p2 = 0;
+				if (Main.USEB)
+					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;		// \sigma_{ij} 
+				else
+					p2 = Math.exp(p[i] * q[j]) / ss;		// \sigma_{ij} 
 				p2 = Math.log(p2 + Double.MIN_VALUE);
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				res += data.get(i,j) * prob;
@@ -126,7 +140,11 @@ public class Evaluation
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				double p2 = 0;
+				if (Main.USEB)
+					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				else
+					p2 = Math.exp(p[i] * q[j]) / ss;
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
@@ -141,7 +159,11 @@ public class Evaluation
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				double p2 = 0;
+				if (Main.USEB)
+					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				else
+					p2 = Math.exp(p[i] * q[j]) / ss;
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
@@ -563,7 +585,11 @@ public class Evaluation
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				double p2 = 0;
+				if (Main.USEB)
+					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				else
+					p2 = Math.exp(p[i] * q[j]) / ss;
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
@@ -578,7 +604,11 @@ public class Evaluation
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				double p2 = 0;
+				if (Main.USEB)
+					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
+				else
+					p2 = Math.exp(p[i] * q[j]) / ss;
 				double prob = (1-pi[i]) * p1 + pi[i] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);

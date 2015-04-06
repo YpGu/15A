@@ -163,4 +163,19 @@ public class FileParser
 			e.printStackTrace();
 		}
 	}
+
+	public static void
+	output(
+		String fileDir,
+		double[] arr
+	) {
+		try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileDir)))) {
+			for (int i = 0; i < arr.length; i++) {
+				writer.printf("%f\n", arr[i]);
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
