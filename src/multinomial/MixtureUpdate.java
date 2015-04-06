@@ -100,7 +100,7 @@ public class MixtureUpdate
 		}
 */
 		// Update Multinomial Parameter \phi |Time: O(KE)|
-		// TODO: why LDA use only [one] i for every j?
+		// TODO: 
 		double[][] resPhi = new double[N][K];
 		for (int i = 0; i < N; i++)
 			for (int k = 0; k < K; k++) 
