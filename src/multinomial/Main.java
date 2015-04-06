@@ -92,9 +92,9 @@ public class Main
 			System.out.println("----- Iteration " + iter + " -----");
 			MixtureUpdate.update(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi);
 		}
-		FileParser.output("./p", p, invDict);
-		FileParser.output("./q", q, invDict);
-		FileParser.output("./b", b, invDict);
+		FileParser.output("./param/p", p, invDict);
+		FileParser.output("./param/q", q, invDict);
+		FileParser.output("./param/b", b, invDict);
 
 		return;
 	}
