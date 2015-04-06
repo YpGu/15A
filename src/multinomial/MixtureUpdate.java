@@ -37,180 +37,139 @@ public class MixtureUpdate
 
 	// Estimate Variational Parameters using EM 
 	// Return phi? because phi is associated with every hub user 
-	public static double[][]
+	public static void
 	variationEM(
 		SparseMatrix<Integer> trainData,
+		int userIndex,								// maximize the likelihood for v_{userIndex} 
 		double[] alpha,	double[][] beta, double[] pi,
 		double[] p, double[] q, double[] b,
-		double[] gamma, double[][] phi, double[] varphi
+		double[] gamma, Map<Integer, double[][]> allPhi, double[] varphi
 	) {
-		int K = alpha.length, N = p.length;
+		int K = alpha.length, N = p.length, M = trainData.getRow(userIndex).size();
+		double[][] phi = allPhi.get(userIndex);
 
-		// Update Dirichlet Parameter \gamma |Time: O(KV)|
-		double[] resGamma = new double[K];
-		double normGamma = 0;
-		for (int k = 0; k < K; k++) {
-			resGamma[k] = alpha[k];
-			normGamma += alpha[k];
-			for (int i = 0; i < N; i++) {
-				resGamma[k] += phi[i][k];
-				normGamma += phi[i][k];
-			}
-		}
-		if (normGamma == 0) normGamma = 1;
-		for (int k = 0; k < K; k++)
-			resGamma[k] /= normGamma;
-
-		// Update Multinomial Parameter \phi |Time: O(KE)|
-/*		double[][] resPhi = new double[N][K];
-		int[][] resPhiPosNegPower = new int[N][K];				// pos-neg: 10 ^ (pos-neg) 
-		for (int i = 0; i < N; i++)
-			for (int k = 0; k < K; k++) 
-				resPhi[i][k] = 1;
-		for (int i = 0; i < N; i++) {
-			double eBase = Math.exp(-varphi[i]);
-			for (int k = 0; k < K; k++) {
-				double a = dLogGamma(gamma[k]);
-				resPhi[i][k] *= Math.exp(a);				// exp[ \Psi(\gamma_k) - \Psi(sumOfGamma) ] 
-				saveToPower(resPhi, resPhiPosNegPower, i, k);
-				double ePower = 0;
-				// TODO: select one j or many j`s?
-				// ----- if all j`s: \sum_j {\beta_{kj}} is tooooooo small 
-				for (int j: trainData.getRow(i)) {
-					resPhi[i][k] *= Math.pow(1 / (beta[k][j] + Double.MIN_VALUE), trainData.get(i, j) * varphi[i]);
-					if (Double.isInfinite(resPhi[i][k])) {
-//					if (true) {
-						System.out.println("beta = " + beta[k][j] + " nij = " + trainData.get(i,j) + " varphi = " + varphi[i]);
-						System.out.println("base = " + (1/(beta[k][j]+Double.MIN_VALUE)));
-						System.out.println("res = " + Math.pow(1 / (beta[k][j] + Double.MIN_VALUE), trainData.get(i, j) * varphi[i]));
-						Scanner sc = new Scanner(System.in);
-						int gu = sc.nextInt();
-					}
-					saveToPower(resPhi, resPhiPosNegPower, i, k);
-//					ePower += trainData.get(i, j) * Math.log(beta[k][j] + Double.MIN_VALUE);
-				}
-//				resPhi[i][k] *= Math.pow(eBase, ePower);		// exp[ -\varphi_i ] ^ [ \sum_j {n_{ij} log \beta_{kj} ] 
-			}
-			double sumPhi = 0;						// normalization 
-			normalize(resPhi, resPhiPosNegPower, i);
-//			for (int k = 0; k < K; k++) sumPhi += resPhi[i][k];
-//			if (sumPhi == 0) sumPhi = 1;
-//			for (int k = 0; k < K; k++)
-//				resPhi[i][k] /= sumPhi;
-		}
-*/
-		// Update Multinomial Parameter \phi |Time: O(KE)|
-		// TODO: 
-		double[][] resPhi = new double[N][K];
-		for (int i = 0; i < N; i++)
-			for (int k = 0; k < K; k++) 
-				resPhi[i][k] = 0;
-//		double[] ssArr = new double[N];
-//		for (int i = 0; i < N; i++) 
-//			ssArr[i] = Evaluation.sumSigma(i, p, q, b);
-		for (int j = 0; j < N; j++) {
-			double normPhi = 0;
-			for (int k = 0; k < K; k++) {
-			//	resPhi[j][k] = Evaluation.dLogGamma(gamma[k]);		// note: phi is in log-scale 
-			//	System.out.println("A: " + resPhi[j][k]);
-				for (int i: trainData.getColumn(j)) {
-//					double sigma = Math.exp(p[i] * q[j] + b[j]) / ss;
-//					resPhi[j][k] += varphi[i] * trainData.get(i, j) * Math.log(sigma + Double.MIN_VALUE);
-//					resPhi[j][k] += (1-varphi[i]) * trainData.get(i, j) * Math.log(beta[k][j] + Double.MIN_VALUE);
-					resPhi[j][k] += (1-varphi[i]) * trainData.get(i, j) * Math.log(beta[k][j] + Double.MIN_VALUE);
-				}
-			//	System.out.println("B: " + resPhi[j][k]);
-				if (k > 0) 
-					normPhi = Evaluation.logSum(normPhi, resPhi[j][k]);
-				else 
-					normPhi = resPhi[j][k];
-			}
-			for (int k = 0; k < K; k++) 					// Normalize
-				resPhi[j][k] = Math.exp(resPhi[j][k] - normPhi);
-		}
-		
+//		double l = Evaluation.calcLikelihood(trainData, alpha, beta, pi, p, q, b, gamma, allPhi, varphi);
+//		System.out.println("=== Likelihood: " + l + " ===");
+	
 		// Update Bernoulli Parameter \varphi |Time: O(KE)|
-		double[] tmpVarphi = new double[N];					// !!! TODO: most of tmpVarphi's will be zero, check why  
-		for (int i = 0; i < N; i++) {
+		while (true) {
+			int i = userIndex;
 			if (pi[i] == 1) {
-				tmpVarphi[i] = 1;
-				continue;
+				varphi[i] = 1;
+				break;
+			}
+			else if (pi[i] == 0) {
+				varphi[i] = 0;
+				break;
 			}
 			double di = pi[i] / (1-pi[i] + Double.MIN_VALUE) + Double.MIN_VALUE;
 			double ss = Evaluation.sumSigma(i, p, q, b);
+			int m = 0;
 			for (int j: trainData.getRow(i)) {
 				double v = Math.exp(p[i] * q[j] + b[j]) / ss;
-
-//				Scanner sc = new Scanner(System.in);
-//				System.out.println("sigma = " + v);
-
-				for (int k = 0; k < K; k++) {
-//					System.out.println("beta = " + beta[k][j] + " phi = " + phi[i][k]);
-					v /= Math.pow(beta[k][j] + Double.MIN_VALUE, phi[i][k]);
-				}
-
-//				System.out.println("v = " + v + "\n");
-//				int gu = sc.nextInt();
-
-				di *= Math.pow(v, trainData.get(i, j));
+				for (int k = 0; k < K; k++) 
+					v -= phi[m][k] * Math.log(beta[k][j] + Double.MIN_VALUE);
+				di *= trainData.get(i, j);
+				m += 1;
 			}
+			di *= Math.log(pi[i] / (1-pi[i]));
+			di = Evaluation.logis(di);
 			if (Double.isInfinite(di))
-				tmpVarphi[i] = 1;
+				varphi[i] = 1;
 			else if (di == di) 
-				tmpVarphi[i] = 1 - 1/(1+di);
+				varphi[i] = di;
 			else								// Because 0 appears in some beta[k][j]'s 
-				tmpVarphi[i] = 1;					// TODO: are there any better ways to deal with it? 
+				varphi[i] = 1;						// TODO: are there any better ways to deal with it? 
 						// It's also somehow unfair that varphi[i] is dependent on k, where some of k's might be very irrelevant. 
+
+/*			System.out.printf("\nvarphi: ");
+			for (int i = 123; i < 133; i++) {
+				System.out.printf("%f\t", tmpVarphi[i]);
+			}
+			for (int i = 0; i < N; i++) {
+	//			if (tmpVarphi[i] != tmpVarphi[i]) System.out.println("tmpVarphi NAN!");
+				varphi[i] = tmpVarphi[i];					// update \varphi 
+	//			varphi[i] = 0.9;
+			}
+*/
+			break;
 		}
 
-		// Update All
-		System.out.printf("gamma: ");
-		for (int k = 0; k < K; k++) {
-			if (resGamma[k] != resGamma[k]) System.out.println("resGamma NAN!");
-			gamma[k] = resGamma[k];						// update \gamma 
-			System.out.printf("%f\t", gamma[k]);
-		} System.out.printf("\nvarphi: ");
-		for (int i = 123; i < 133; i++) {
-			System.out.printf("%f\t", tmpVarphi[i]);
-		} System.out.printf("\nphi: ");
-		for (int i = 519; i < 529; i++) {
-			System.out.printf("%f\t", resPhi[i][1]);
-		} System.out.printf("\n");
-		for (int i = 0; i < N; i++) {
+		// Update Dirichlet Parameter \gamma |Time: O(KV)|			/// FIXED - 04/05
+		if (true) {
+			double[] resGamma = new double[K];
+			double normGamma = 0;
 			for (int k = 0; k < K; k++) {
-				if (resPhi[i][k] != resPhi[i][k]) System.out.println("resPhi NAN!");
-				phi[i][k] = resPhi[i][k];				// update \phi 
+				resGamma[k] = alpha[k];
+				normGamma += alpha[k];
+				for (int m = 0; m < M; m++) {
+					resGamma[k] += phi[m][k];
+					normGamma += phi[m][k];
+				}
 			}
-		}
-		for (int i = 0; i < N; i++) {
-			if (tmpVarphi[i] != tmpVarphi[i]) System.out.println("tmpVarphi NAN!");
-			varphi[i] = tmpVarphi[i];					// update \varphi 
-//			varphi[i] = 0.9;
+			if (normGamma == 0) normGamma = 1;
+			for (int k = 0; k < K; k++)
+				resGamma[k] /= normGamma;
+
+			System.out.printf("gamma: ");					// update \gamma 
+			for (int k = 0; k < K; k++) {
+	//			if (resGamma[k] != resGamma[k]) System.out.println("resGamma NAN!");
+				gamma[k] = resGamma[k];
+				System.out.printf("%f\t", gamma[k]);
+			}
+ 		}
+
+		// Update Multinomial Parameter \phi |Time: O(KE)|
+		if (true) {
+			double[][] resPhi = new double[M][K];
+			int i = userIndex, m = 0;
+			double normPhi = 0;
+			for (int j: trainData.getColumn(i)) {
+				for (int k = 0; k < K; k++) {				// note: phi is in log-scale 
+					resPhi[m][k] = (1-varphi[i]) * trainData.get(i, j) * Math.log(beta[k][j] + Double.MIN_VALUE);
+					if (k > 0) 
+						normPhi = Evaluation.logSum(normPhi, resPhi[j][k]);
+					else 
+						normPhi = resPhi[m][k];
+				}
+				for (int k = 0; k < K; k++)				// Normalize
+					resPhi[m][k] = Math.exp(resPhi[m][k] - normPhi);
+				m += 1;
+			}
+			allPhi.put(i, resPhi);
+
+			System.out.printf("\nphi: ");
+			for (int ii = 519; ii < 529; ii++) {
+				System.out.printf("%f\t", resPhi[ii][1]);
+			}
 		}
 
 		return;
 	}
 
-	// Update Model Parameters using Gradient Ascent 
+	// Update Model Parameters using Gradient Ascent (done after Variational Inference) 
 	public static void
 	modelParamEstimate(
 		SparseMatrix<Integer> trainData,
 		double[] alpha,	double[][] beta, double[] pi,
 		double[] p, double[] q, double[] b,
-		double[] gamma, double[][] phi, double[] varphi
+		double[] gamma, Map<Integer, double[][]> allPhi, double[] varphi
 	) {
 		int K = alpha.length, N = p.length;
 
-		// Update \beta |Time: O(KE)| 
+		// Update \beta 
 		double[][] tmpBeta = new double[K][N];
 		for (int k = 0; k < K; k++) {
 			double normBeta = 0;
-			for (int j = 0; j < N; j++) {
-				for (int i: trainData.getColumn(j)) {
-					// beta_{kj} ~~ \sum_{i} { \phi_{ij} * (1-\varphi_i) * n_{ij} } 
-					tmpBeta[k][j] += trainData.get(i, j) * phi[i][k] * (1-varphi[i]);
+			for (int i = 0; i < N; i++) {
+				double[][] phi = allPhi.get(i);
+				int m = 0;
+				for (int j: trainData.getRow(i)) {
+					double v = trainData.get(i, j) * phi[m][k] * (1-varphi[i]);
+					tmpBeta[k][j] += v;
+					normBeta += v;
+					m += 1;
 				}
-				normBeta += tmpBeta[k][j];
 			}
 			if (normBeta == 0) normBeta = 1;
 			for (int j = 0; j < N; j++) 
@@ -244,9 +203,9 @@ public class MixtureUpdate
 			q[i] += lr * gradQ[i];
 			b[i] += lr * gradB[i];
 		}
-//		FileParser.output("./p", p);
-//		FileParser.output("./q", q);
-//		FileParser.output("./b", b);
+//		FileParser.output("./param/p", p);
+//		FileParser.output("./param/q", q);
+//		FileParser.output("./param/b", b);
 
 		return;
 	}
@@ -256,11 +215,17 @@ public class MixtureUpdate
 		SparseMatrix<Integer> trainData,
 		double[] alpha,	double[][] beta, double[] pi,
 		double[] p, double[] q, double[] b,
-		double[] gamma, double[][] phi, double[] varphi
+		double[] gamma, Map<Integer, double[][]> allPhi, double[] varphi
 	) {
-		variationEM(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi);
-		modelParamEstimate(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi);
-		double l = Evaluation.calcLikelihood(trainData, alpha, beta, pi, p, q, b, gamma, phi, varphi);
+		for (int i = 0; i < trainData.getXDictSize(); i++) {
+			variationEM(trainData, i, alpha, beta, pi, p, q, b, gamma, allPhi, varphi);
+		}
+		modelParamEstimate(trainData, alpha, beta, pi, p, q, b, gamma, allPhi, varphi);
+
+		double l = 0;
+		for (int i = 0; i < trainData.getXDictSize(); i++) {
+			l += Evaluation.calcLikelihood(trainData, i, alpha, beta, pi, p, q, b, gamma, allPhi, varphi);
+		}
 		System.out.println("=== Likelihood: " + l + " ===");
 
 		return;

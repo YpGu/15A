@@ -45,6 +45,14 @@ public class Evaluation
 	}
 
 	// Magic. Do not touch. 
+	// Calculate log of Gamma Function 
+	public static double logGamma(double x) {
+		double z = 1/(x*x);
+		x = x + 6;
+		z = (((-0.000595238095238*z+0.000793650793651)*z-0.002777777777778)*z+0.083333333333333)/x;
+		z = (x-0.5)*Math.log(x)-x+0.918938533204673+z-Math.log(x-1)-Math.log(x-2)-Math.log(x-3)-Math.log(x-4)-Math.log(x-5)-Math.log(x-6);
+		return z;
+	}
 	// Calculate the Derivative of log-Gamma (Digamma) Function 
 	public static double dLogGamma(double x) {
 		if (x == 0) return Math.pow(10,-9);
@@ -65,26 +73,42 @@ public class Evaluation
 		return res;
 	}
 
+	// This is the <Lower Bound> of the log-Likelihood of User-Count Vector for User i 
 	public static double calcLikelihood(
 		SparseMatrix<Integer> data,
+		int userIndex,
 		double[] alpha,	double[][] beta, double[] pi,
 		double[] p, double[] q, double[] b,
-		double[] gamma, double[][] phi, double[] varphi
+		double[] gamma, Map<Integer, double[][]> allPhi, double[] varphi
 	) {
-		int K = alpha.length, N = p.length;
+		int K = alpha.length, N = p.length, i = userIndex, m = 0;
+		double sumAlpha = 0, sumGamma = 0;
+		double[][] phi = allPhi.get(i);
 		double res = 0;
-		for (int i = 0; i < N; i++) {
-			double ss = Evaluation.sumSigma(i, p, q, b);
+		for (int k = 0; k < K; k++) {
+			sumAlpha += alpha[k];
+			sumGamma += alpha[k];
+		}
+
+		res = logGamma(sumAlpha) - logGamma(sumGamma);
+		for (int k = 0; k < K; k++) {
+			res -= logGamma(alpha[k]);
+			res += logGamma(gamma[k]);
+			res += (alpha[k]-gamma[k]) * (dLogGamma(gamma[k]) - dLogGamma(sumGamma));
 			for (int j: data.getRow(i)) {
-				double p1 = 0;
-				for (int k = 0; k < K; k++) 
-					p1 += phi[i][k] * beta[k][j];
-				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
-				// n(i,j) * log p(i,j) = n(i,j) * log{ (1-pi) * \sum_k{theta_{ik} * beta_{kj}} + pi * sigma(i,j) } 
-				// \theta ~~ \phi (variational) 
-				res += data.get(i, j) * Math.log( (1-pi[i]) * p1 + pi[i] * p2 + Double.MIN_VALUE );
+				if (phi[m][k] > 0) {
+					res += phi[m][k] * (dLogGamma(gamma[k]) - dLogGamma(sumGamma) - Math.log(phi[m][k])
+						+ data.get(i,j) * (1-varphi[i]) * Math.log(beta[k][j] + Double.MIN_VALUE));
+				}
+				m += 1;
 			}
 		}
+		double ss = sumSigma(i, p, q, b);
+		for (int j: data.getRow(i)) {
+			double sg = Math.exp(p[i] * q[j] + b[j]) / ss;		// \sigma_{ij} 
+			res += data.get(i,j) * varphi[i] * sg;
+		}
+
 		return res;
 	}
 

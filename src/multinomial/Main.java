@@ -30,7 +30,7 @@ public class Main
 
 	// Variational Parameters
 	public static double[] gamma;					// K * 1
-	public static double[][] phi;					// N * K
+	public static Map<Integer, double[][]> phi;			// (for every i:) M * K
 	public static double[] varphi;					// N * 1
 
 	// Initialization and Read Data 
@@ -56,7 +56,7 @@ public class Main
 		// Initialize Parameters 
 		alpha = new double[K]; beta = new double[K][N]; pi = new double[N];
 		p = new double[N]; q = new double[N]; b = new double[N];
-		gamma = new double[K]; phi = new double[N][K]; varphi = new double[N];
+		gamma = new double[K]; phi = new HashMap<Integer, double[][]>(); varphi = new double[N];
 		for (int k = 0; k < K; k++) alpha[k] = 2;
 		for (int k = 0; k < K; k++) {
 			double sumBeta = 0;
@@ -67,9 +67,11 @@ public class Main
 			for (int j = 0; j < N; j++) 
 				beta[k][j] /= sumBeta;
 		}
-		for (int i = 0; i < N; i++)
-			for (int k = 0; k < K; k++)
-				phi[i][k] = 1/(double)K;
+		for (int i = 0; i < N; i++) {
+			int M = trainData.getRow(i).size();
+			double[][] lPhi = new double[M][K];
+			phi.put(i, lPhi);
+		}
 		for (int i = 0; i < N; i++) {
 			pi[i] = 0.4 + 0.2 * rand.nextDouble();
 			varphi[i] = pi[i];
@@ -102,6 +104,7 @@ public class Main
 	// Test
 	public static void
 	test() {
+/*
 		// todo
 		System.out.println("Training (all):");
 		Evaluation.auroc(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
@@ -119,6 +122,7 @@ public class Main
 
 		System.out.println("Classification:");
 		Evaluation.partyClassify(p, q, b, invDict);
+*/
 	}
 
 	// Entry
