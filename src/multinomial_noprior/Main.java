@@ -18,12 +18,13 @@ import java.util.*;
 public class Main
 {
 	// Configuration
-	public static final int K = 10;					// Number of Latent Features
+	public static final int K = 5;					// Number of Latent Features
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 200;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 50;				// Maximum Number of Iterations 
+	public static final double THRESHOLD = Math.pow(10,-5);
 	public static final boolean USE_BKG = true;
 	public static final boolean USE_IPM = true;
-	public static final boolean USEB = true;			// true if we use p[i]*q[j]+b[j]; fase if we use p[i]*q[j] 
+	public static final boolean USEB = false;			// true if we use p[i]*q[j]+b[j]; fase if we use p[i]*q[j] 
 
 	public static SparseMatrix<Integer> trainData, testData;
 	public static SparseMatrix<Integer> trainDataNeg, testDataNeg;
@@ -98,16 +99,20 @@ public class Main
 	// Train
 	public static void
 	train() {
+		double oldLikelihood = -1;
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("----- Iteration " + iter + " -----");
-			Update.update(trainData, pi, theta, beta, p, q, b, USE_BKG, USE_IPM, iter);
+			double likelihood = Update.update(trainData, pi, theta, beta, p, q, b, USE_BKG, USE_IPM, iter);
 
 			FileParser.output("./param/p", p, invDict);
 			FileParser.output("./param/q", q, invDict);
 			FileParser.output("./param/b", b, invDict);
 			FileParser.output("./param/pi", pi, invDict);
-		}
 
+			double rate = Math.abs((likelihood-oldLikelihood)/oldLikelihood);
+			if (rate < THRESHOLD && iter != 0)
+				break;
+		}
 
 		return;
 	}

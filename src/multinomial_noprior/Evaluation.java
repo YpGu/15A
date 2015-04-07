@@ -1000,16 +1000,6 @@ public class Evaluation
 	// Party Affiliation Classification Accuracy
 	public static void 
 	partyClassify (double[] p, double[] q, double[] b, Map<Integer, String> invDict) {
-		Map<String, Double> mapP = new HashMap<String, Double>();
-		Map<String, Double> mapQ = new HashMap<String, Double>();
-		for (int i = 0; i < p.length; i++) {
-			String rawID = invDict.get(i);
-			mapP.put(rawID, p[i]);
-			mapQ.put(rawID, q[i]);
-		}
-		Map<String, Double> sortedP = ArrayTools.ValueComparator.sortByValue(mapP);
-		Map<String, Double> sortedQ = ArrayTools.ValueComparator.sortByValue(mapQ);
-
 		String fileDir = "../../data/dict/merge_id_list";
 		Map<String, Integer> party = new HashMap<String, Integer>();
 		int numD = 0, numR = 0;
@@ -1022,60 +1012,87 @@ public class Evaluation
 				String rawID = tokens[1];
 				if (tokens[3].equals("R")) {
 					party.put(rawID, 1);
-					numR += 1;
 				}
 				else if (tokens[3].equals("D")) {
 					party.put(rawID, 2);
-					numD += 1;
 				}
 			}
 		}
 		catch (IOException e) {
 			e.printStackTrace();
 		}
+		Map<String, Double> mapP = new HashMap<String, Double>();
+		Map<String, Double> mapQ = new HashMap<String, Double>();
+		for (int i = 0; i < p.length; i++) {
+			String rawID = invDict.get(i);
+			if (party.containsKey(rawID)) {
+				mapP.put(rawID, p[i]);
+				mapQ.put(rawID, q[i]);
+				if (party.get(rawID) == 1) numR += 1;
+				if (party.get(rawID) == 2) numD += 1;
+			}
+		}
+		Map<String, Double> sortedP = ArrayTools.ValueComparator.sortByValue(mapP);
+		Map<String, Double> sortedQ = ArrayTools.ValueComparator.sortByValue(mapQ);
+
 		System.out.println("\tnumR = " + numR + " numD = " + numD);
 
 		int count = 0; int cor = 0;
 		for (Map.Entry<String, Double> e: sortedP.entrySet()) {
-			if (count == numR) break;
 			try {
-				if (party.get(e.getKey()) == 1)
+				if (party.get(e.getKey()) == 1 && count < numR) {
+					cor += 1;
+				}
+				else if (party.get(e.getKey()) == 2 && count >= numR)
 					cor += 1;
 			}
-			catch (java.lang.NullPointerException f) {} 
+			catch (java.lang.NullPointerException f) {}
+			if (party.containsKey(e.getKey()))
+				count += 1;
 		}
-		System.out.println("\tP: " + cor + " correct, accuracy = " + (double)cor/(numD+numR));
+		System.out.println("\tP: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/count);
 		count = 0; cor = 0;
 		for (Map.Entry<String, Double> e: sortedP.entrySet()) {
-			if (count == numD) break;
 			try {
-				if (party.get(e.getKey()) == 2)
+				if (party.get(e.getKey()) == 2 && count < numD)
+					cor += 1;
+				else if (party.get(e.getKey()) == 1 && count >= numD)
 					cor += 1;
 			}
 			catch (java.lang.NullPointerException f) {} 
+			if (party.containsKey(e.getKey()))
+				count += 1;
 		}
-		System.out.println("\tP: " + cor + " correct, accuracy = " + (double)cor/(numD+numR));
+		System.out.println("\tP: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/(numD+numR));
 	
 		count = 0; cor = 0;
 		for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
-			if (count == numR) break;
 			try {
-				if (party.get(e.getKey()) == 1)
+				if (party.get(e.getKey()) == 1 && count < numR)
+					cor += 1;
+				else if (party.get(e.getKey()) == 2 && count >= numR)
 					cor += 1;
 			}
 			catch (java.lang.NullPointerException f) {} 
+			if (party.containsKey(e.getKey()))
+				count += 1;
 		}
-		System.out.println("\tQ: " + cor + " correct, accuracy = " + (double)cor/(numD+numR));
+		System.out.println("\tQ: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/(numD+numR));
 		count = 0; cor = 0;
 		for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
-			if (count == numD) break;
 			try {
-				if (party.get(e.getKey()) == 2)
+				if (party.get(e.getKey()) == 2 && count < numD)
+					cor += 1;
+				else if (party.get(e.getKey()) == 1 && count >= numD)
 					cor += 1;
 			}
 			catch (java.lang.NullPointerException f) {} 
+			if (party.containsKey(e.getKey()))
+				count += 1;
 		}
-		System.out.println("\tQ: " + cor + " correct, accuracy = " + (double)cor/(numD+numR));
+		System.out.println("\tQ: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/(numD+numR));
+
+		return;
 	}
 }
 

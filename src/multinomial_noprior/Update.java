@@ -7,13 +7,13 @@ import java.util.*;
 public class Update
 {
 	// Learning Rate
-	public static final double reg = 0.01;
+	public static final double reg = 0.001;
 
 	public static final int MAX_ITER_IPM = 3;
 	public static final int MAX_ITER_BKG = 3;
 
 	// Estimate Variational Parameters using EM 
-	public static void
+	public static double
 	update(
 		SparseMatrix<Integer> trainData,
 		double[] pi,
@@ -49,11 +49,12 @@ public class Update
 			}
 		}
 
+		double l = 0;
 		if (ipm) {
 			for (int iter = 0; iter < MAX_ITER_IPM; iter++) {
 				System.out.println("    *** Updating p,q,b " + iter + " ***");
 				IdealPointInference.update(trainData, pi, theta, beta, p, q, b, reg, iterRecord);
-				double l = Evaluation.calcLikelihood(trainData, pi, theta, beta, p, q, b);
+				l = Evaluation.calcLikelihood(trainData, pi, theta, beta, p, q, b);
 				System.out.println("\tlogL (lower bound) = " + l);
 			}
 		}
@@ -61,12 +62,12 @@ public class Update
 			for (int iter = 0; iter < MAX_ITER_BKG; iter++) {
 				System.out.println("    *** Updating background parameters " + iter + " ***");
 				BackgroundInference.update(trainData, pi, theta, beta);
-				double l = Evaluation.calcLikelihood(trainData, pi, theta, beta, p, q, b);
+				l = Evaluation.calcLikelihood(trainData, pi, theta, beta, p, q, b);
 				System.out.println("\tlogL (lower bound) = " + l);
 			}
 		}
 
-		return;
+		return l;
 	}
 }
 
