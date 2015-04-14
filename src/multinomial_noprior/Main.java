@@ -18,12 +18,12 @@ import java.util.*;
 public class Main
 {
 	// Configuration
-	public static final int K = 5;					// Number of Latent Features
+	public static final int K = 50;					// Number of Latent Features
 	public static int N;						// Number of Users
 	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
 	public static final double THRESHOLD = Math.pow(10,-5);
 	public static final boolean USE_BKG = true;
-	public static final boolean USE_IPM = false;
+	public static final boolean USE_IPM = true;
 	public static final boolean USEB = false;			// true if we use p[i]*q[j]+b[j]; fase if we use p[i]*q[j] 
 
 	public static SparseMatrix<Integer> trainData, testData;
@@ -130,6 +130,7 @@ public class Main
 	// Test
 	public static void
 	test() {
+		System.out.println("pi[0] = " + pi[0] + " pi[1] = " + pi[1]);
 		// todo
 		System.out.println("Training (all):");
 		Evaluation.auroc(trainData, trainDataNeg, pi, theta, beta, p, q, b, 1);
