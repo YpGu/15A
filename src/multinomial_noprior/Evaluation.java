@@ -88,7 +88,7 @@ public class Evaluation
 	// This is the <Lower Bound> of the log-Likelihood 
 	public static double calcLikelihood(
 		SparseMatrix<Integer> data,
-		double[] pi,
+		double[] gamma,
 		double[][] theta, double[][] beta,
 		double[] p, double[] q, double[] b
 	) {
@@ -108,7 +108,7 @@ public class Evaluation
 				else
 					p2 = Math.exp(p[i] * q[j]) / ss;		// \sigma_{ij} 
 				p2 = Math.log(p2 + Double.MIN_VALUE);
-				double prob = pi[0] * p1 + pi[1] * p2;
+				double prob = (1-gamma[i]) * p1 + gamma[i] * p2;
 				res += data.get(i,j) * prob;
 			}
 		}
@@ -333,234 +333,6 @@ public class Evaluation
 		return;
 	}
 
-	// auroc 
-	public static void 
-	auroc2(
-		SparseMatrix<Integer> posData, SparseMatrix<Integer> negData,
-		double[] pi,
-		double[][] theta, double[][] beta,
-		double[] p, double[] q, double[] b,
-		int type
-	) {
-		int K = beta.length, N = p.length;
-		double averV = 0, averV1 = 0, averV2 = 0;
-
-		for (int i = 0; i < N; i++) {
-			int tupleID = 0;
-			Map<Integer, Double> recProbs = new HashMap<Integer, Double>();
-			Map<Integer, Double> recProbs1 = new HashMap<Integer, Double>();
-			Map<Integer, Double> recProbs2 = new HashMap<Integer, Double>();
-			Set<Integer> posGroundTruth = new HashSet<Integer>();
-			Set<Integer> negGroundTruth = new HashSet<Integer>();
-
-			double ss = sumSigma(i, p, q, b);
-			for (int j: posData.getRow(i)) {
-				double p1 = 0;
-				for (int k = 0; k < K; k++) 
-					p1 += theta[i][k] * beta[k][j];
-				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
-				double prob = (1-pi[i]) * p1 + pi[i] * p2;
-				recProbs.put(tupleID, prob);
-				recProbs1.put(tupleID, p1);
-				recProbs2.put(tupleID, p2);
-				posGroundTruth.add(tupleID);
-				tupleID += 1;
-			}
-			for (int j: negData.getRow(i)) {
-				double p1 = 0;
-				for (int k = 0; k < K; k++) 
-					p1 += theta[i][k] * beta[k][j];
-				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
-				double prob = (1-pi[i]) * p1 + pi[i] * p2;
-				recProbs.put(tupleID, prob);
-				recProbs1.put(tupleID, p1);
-				recProbs2.put(tupleID, p2);
-				negGroundTruth.add(tupleID);
-				tupleID += 1;
-			}
-
-			double posSamples = posGroundTruth.size();
-			double negSamples = negGroundTruth.size();
-//			System.out.printf("\tSize of +'s = %f Size of -'s = %f", posSamples, negSamples);
-
-			// calculate AUROC
-			Map<Integer, Double> sortedProbs = ArrayTools.ValueComparator.sortByValue(recProbs);
-			Map<Integer, Double> sortedProbs1 = ArrayTools.ValueComparator.sortByValue(recProbs1);
-			Map<Integer, Double> sortedProbs2 = ArrayTools.ValueComparator.sortByValue(recProbs2);
-
-			if (type == 1) {
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTrain")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
-						if (posGroundTruth.contains(e.getKey())) 
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTrain_p1")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs1.entrySet()) {
-						if (posGroundTruth.contains(e.getKey())) 
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTrain_p2")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs2.entrySet()) {
-						if (posGroundTruth.contains(e.getKey())) 
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			if (type == 2) {
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTest")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
-						if (posGroundTruth.contains(e.getKey()))
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTest_p1")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs1.entrySet()) {
-						if (posGroundTruth.contains(e.getKey()))
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/roc/secMixtureTest_p2")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs2.entrySet()) {
-						if (posGroundTruth.contains(e.getKey()))
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-
-//			System.out.println(" sortedProbs size = " + sortedProbs.size());
-			if (true) {
-				double newX = 0, newY = 0, oldX = 0, oldY = 0;
-				double upperAUC = 0, lowerAUC = 0;
-				for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
-					int curKey = e.getKey();
-	
-					if (posGroundTruth.contains(curKey)) {
-						newY += 1.0/posSamples;
-					}
-					else if (negGroundTruth.contains(curKey)) {
-						newX += 1.0/negSamples;
-					}
-					else {
-						// check key? 
-						Scanner sc = new Scanner(System.in);
-					}
-					upperAUC += (newX - oldX) * newY;
-					lowerAUC += (newX - oldX) * oldY;
-
-					oldX = newX;
-					oldY = newY;
-				}
-//				System.out.printf("\tUsing unified model: AUROC between %f and %f", lowerAUC, upperAUC);
-//				System.out.println(" (newY = " + newY + " newX = " + newX + ")");
-				if (WEIGHTED)
-					averV += posData.getRow(i).size() * (lowerAUC+upperAUC)/2.0;
-				else
-					averV += (lowerAUC+upperAUC)/2.0;
-			}
-			if (true) {
-				double newX = 0, newY = 0, oldX = 0, oldY = 0;
-				double upperAUC = 0, lowerAUC = 0;
-				for (Map.Entry<Integer, Double> e: sortedProbs1.entrySet()) {
-					Scanner sc = new Scanner(System.in);
-					int curKey = e.getKey();
-	
-					if (posGroundTruth.contains(curKey)) {
-						newY += 1.0/posSamples;
-					}
-					else if (negGroundTruth.contains(curKey)) {
-						newX += 1.0/negSamples;
-					}
-					else {
-						// check key? 
-					}
-					upperAUC += (newX - oldX) * newY;
-					lowerAUC += (newX - oldX) * oldY;
-
-					oldX = newX;
-					oldY = newY;
-				}
-//				System.out.printf("\tUsing background model: AUROC between %f and %f", lowerAUC, upperAUC);
-//				System.out.println(" (newY = " + newY + " newX = " + newX + ")");
-				if (WEIGHTED)
-					averV1 += posData.getRow(i).size() * (lowerAUC+upperAUC)/2.0;
-				else
-					averV1 += (lowerAUC+upperAUC)/2.0;
-			}
-			if (true) {
-				double newX = 0, newY = 0, oldX = 0, oldY = 0;
-				double upperAUC = 0, lowerAUC = 0;
-				for (Map.Entry<Integer, Double> e: sortedProbs2.entrySet()) {
-					Scanner sc = new Scanner(System.in);
-					int curKey = e.getKey();
-	
-					if (posGroundTruth.contains(curKey)) {
-						newY += 1.0/posSamples;
-					}
-					else if (negGroundTruth.contains(curKey)) {
-						newX += 1.0/negSamples;
-					}
-					else {
-						// check key? 
-					}
-					upperAUC += (newX - oldX) * newY;
-					lowerAUC += (newX - oldX) * oldY;
-
-					oldX = newX;
-					oldY = newY;
-				}
-//				System.out.printf("\tUsing ideal point model: AUROC between %f and %f", lowerAUC, upperAUC);
-//				System.out.println(" (newY = " + newY + " newX = " + newX + ")");
-				if (WEIGHTED)
-					averV2 += posData.getRow(i).size() * (lowerAUC+upperAUC)/2.0;
-				else
-					averV2 += (lowerAUC+upperAUC)/2.0;
-			}
-		}
-
-		if (!WEIGHTED)
-			{ averV /= N; averV1 /= N; averV2 /= N; }
-		else
-			{ averV /= posData.getSize(); averV1 /= posData.getSize(); averV2 /= posData.getSize(); }
-		System.out.println("\taverV = " + averV);
-		System.out.println("\taverV1 = " + averV1);
-		System.out.println("\taverV2 = " + averV2);
-
-		return;
-	}
-
-
 	// au p-r c
 	public static void 
 	auprc(
@@ -773,230 +545,6 @@ public class Evaluation
 		return;
 	}
 
-	// au p-r c
-	public static void 
-	auprc2(
-		SparseMatrix<Integer> posData, SparseMatrix<Integer> negData,
-		double[] alpha,	double[][] beta, double[] pi,
-		double[] p, double[] q, double[] b,
-		double[] gamma, double[][] phi, double[] varphi,
-		int type
-	) {
-		int K = alpha.length, N = p.length;
-		double averV = 0, averV1 = 0, averV2 = 0;
-
-		for (int i = 0; i < N; i++) {
-			Map<Integer, Double> recProbs = new HashMap<Integer, Double>();
-			Map<Integer, Double> recProbs1 = new HashMap<Integer, Double>();
-			Map<Integer, Double> recProbs2 = new HashMap<Integer, Double>();
-			Set<Integer> posGroundTruth = new HashSet<Integer>();
-			Set<Integer> negGroundTruth = new HashSet<Integer>();
-			int tupleID = 0;
-
-			double ss = sumSigma(i, p, q, b);
-			Set<Integer> s = posData.getRow(i);
-			for (int j: s) {
-				double p1 = 0;
-				for (int k = 0; k < K; k++) 
-					p1 += phi[i][k] * beta[k][j];
-				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
-				double prob = (1-pi[i]) * p1 + pi[i] * p2;
-				recProbs.put(tupleID, prob);
-				recProbs1.put(tupleID, p1);
-				recProbs2.put(tupleID, p2);
-				posGroundTruth.add(tupleID);
-				tupleID += 1;
-			}
-			s = negData.getRow(i);
-			for (int j: s) {
-				double p1 = 0;
-				for (int k = 0; k < K; k++) 
-					p1 += phi[i][k] * beta[k][j];
-				double p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
-				double prob = (1-pi[i]) * p1 + pi[i] * p2;
-				recProbs.put(tupleID, prob);
-				recProbs1.put(tupleID, p1);
-				recProbs2.put(tupleID, p2);
-				negGroundTruth.add(tupleID);
-				tupleID += 1;
-			}
-
-			double posSamples = posGroundTruth.size();
-			double negSamples = negGroundTruth.size();
-//			System.out.printf("\tSize of +'s = %f Size of -'s = %f", posSamples, negSamples);
-
-			// calculate AUPRC
-			Map<Integer, Double> sortedProbs = ArrayTools.ValueComparator.sortByValue(recProbs);
-			Map<Integer, Double> sortedProbs1 = ArrayTools.ValueComparator.sortByValue(recProbs1);
-			Map<Integer, Double> sortedProbs2 = ArrayTools.ValueComparator.sortByValue(recProbs2);
-
-			if (type == 1) {
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTrain")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
-						if (posGroundTruth.contains(e.getKey())) 
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTrain_p1")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs1.entrySet()) {
-						if (posGroundTruth.contains(e.getKey())) 
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTrain_p2")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs2.entrySet()) {
-						if (posGroundTruth.contains(e.getKey())) 
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			if (type == 2) {
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTest")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
-						if (posGroundTruth.contains(e.getKey())) 
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTest_p1")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs1.entrySet()) {
-						if (posGroundTruth.contains(e.getKey())) 
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter("./record/prc/secMixtureTest_p2")))) {
-					for (Map.Entry<Integer, Double> e: sortedProbs2.entrySet()) {
-						if (posGroundTruth.contains(e.getKey())) 
-							writer.printf("%s\t%f\t1\n", e.getKey(), e.getValue());
-						else
-							writer.printf("%s\t%f\t-1\n", e.getKey(), e.getValue());
-					}
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-
-//			System.out.println(" sortedProbs size = " + sortedProbs.size());
-			// x: recall; y: precision
-			if (true) {
-				double newX = 0, newY = 0, oldX = 0, oldY = 0;
-				double upperAUC = 0, lowerAUC = 0;
-				double numOfRetrieved = 0, numOfRelevant = 0;
-				for (Map.Entry<Integer, Double> e: sortedProbs.entrySet()) {
-					int curKey = e.getKey();
-					numOfRetrieved += 1;
-	
-					if (posGroundTruth.contains(curKey)) {
-						numOfRelevant += 1;
-					}
-					newY = numOfRelevant/numOfRetrieved;
-					newX = numOfRelevant/(double)posSamples;
-	
-					upperAUC += (newX - oldX) * newY;
-					lowerAUC += (newX - oldX) * oldY;
-
-					oldX = newX;
-					oldY = newY;
-				}
-//				System.out.printf("\tUsing unified model: AUPRC between %f and %f", lowerAUC, upperAUC);
-//				System.out.println(" (newY = " + newY + " newX = " + newX + ")");
-				if (WEIGHTED)
-					averV += posData.getRow(i).size() * (lowerAUC+upperAUC)/2.0;
-				else
-					averV += (lowerAUC+upperAUC)/2.0;
-			}
-			if (true) {
-				double newX = 0, newY = 0, oldX = 0, oldY = 0;
-				double upperAUC = 0, lowerAUC = 0;
-				double numOfRetrieved = 0, numOfRelevant = 0;
-				for (Map.Entry<Integer, Double> e: sortedProbs1.entrySet()) {
-					int curKey = e.getKey();
-					numOfRetrieved += 1;
-	
-					if (posGroundTruth.contains(curKey)) {
-						numOfRelevant += 1;
-					}
-					newY = numOfRelevant/numOfRetrieved;
-					newX = numOfRelevant/(double)posSamples;
-
-					upperAUC += (newX - oldX) * newY;
-					lowerAUC += (newX - oldX) * oldY;
-
-					oldX = newX;
-					oldY = newY;
-				}
-//				System.out.printf("\tUsing background model: AUPRC between %f and %f", lowerAUC, upperAUC);
-//				System.out.println(" (newY = " + newY + " newX = " + newX + ")");
-				if (WEIGHTED)
-					averV1 += posData.getRow(i).size() * (lowerAUC+upperAUC)/2.0;
-				else
-					averV1 += (lowerAUC+upperAUC)/2.0;
-			}
-			if (true) {
-				double newX = 0, newY = 0, oldX = 0, oldY = 0;
-				double upperAUC = 0, lowerAUC = 0;
-				double numOfRetrieved = 0, numOfRelevant = 0;
-				for (Map.Entry<Integer, Double> e: sortedProbs2.entrySet()) {
-					int curKey = e.getKey();
-					numOfRetrieved += 1;
-
-					if (posGroundTruth.contains(curKey)) {
-						numOfRelevant += 1;
-					}
-					newY = numOfRelevant/numOfRetrieved;
-					newX = numOfRelevant/(double)posSamples;
-
-					upperAUC += (newX - oldX) * newY;
-					lowerAUC += (newX - oldX) * oldY;
-
-					oldX = newX;
-					oldY = newY;
-				}
-//				System.out.printf("\tUsing ideal point model: AUPRC between %f and %f", lowerAUC, upperAUC);
-//				System.out.println(" (newY = " + newY + " newX = " + newX + ")");
-				if (WEIGHTED)
-					averV2 += posData.getRow(i).size() * (lowerAUC+upperAUC)/2.0;
-				else
-					averV2 += (lowerAUC+upperAUC)/2.0;
-			}
-		}
-
-		if (!WEIGHTED)
-			{ averV /= N; averV1 /= N; averV2 /= N; }
-		else
-			{ averV /= posData.getSize(); averV1 /= posData.getSize(); averV2 /= posData.getSize(); }
-		System.out.println("\taverV = " + averV);
-		System.out.println("\taverV1 = " + averV1);
-		System.out.println("\taverV2 = " + averV2);
-
-		return;
-	}
-
 	// Party Affiliation Classification Accuracy
 	public static void 
 	partyClassify (double[] p, double[] q, double[] b, Map<Integer, String> invDict) {
@@ -1037,60 +585,100 @@ public class Evaluation
 
 		System.out.println("\tnumR = " + numR + " numD = " + numD);
 
-		int count = 0; int cor = 0;
-		for (Map.Entry<String, Double> e: sortedP.entrySet()) {
-			try {
-				if (party.get(e.getKey()) == 1 && count < numR) {
-					cor += 1;
+		if (true) {
+			int count = 0; int cor = 0;
+			System.out.println("Threshold = 0:");
+			for (Map.Entry<String, Double> e: sortedP.entrySet()) {
+				try {
+					if (party.get(e.getKey()) == 1 && e.getValue() < 0) 
+						cor += 1;
+					else if (party.get(e.getKey()) == 2 && count >= 0)
+						cor += 1;
 				}
-				else if (party.get(e.getKey()) == 2 && count >= numR)
-					cor += 1;
+				catch (java.lang.NullPointerException f) {}
+				if (party.containsKey(e.getKey()))
+					count += 1;
 			}
-			catch (java.lang.NullPointerException f) {}
-			if (party.containsKey(e.getKey()))
-				count += 1;
-		}
-		System.out.println("\tP: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/count);
-		count = 0; cor = 0;
-		for (Map.Entry<String, Double> e: sortedP.entrySet()) {
-			try {
-				if (party.get(e.getKey()) == 2 && count < numD)
-					cor += 1;
-				else if (party.get(e.getKey()) == 1 && count >= numD)
-					cor += 1;
+			System.out.println("\tP: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/count);
+			count = 0; cor = 0;
+			for (Map.Entry<String, Double> e: sortedP.entrySet()) {
+				try {
+					if (party.get(e.getKey()) == 2 && e.getValue() < 0)
+						cor += 1;
+					else if (party.get(e.getKey()) == 1 && e.getValue() >= 0)
+						cor += 1;
+				}
+				catch (java.lang.NullPointerException f) {} 
+				if (party.containsKey(e.getKey()))
+					count += 1;
 			}
-			catch (java.lang.NullPointerException f) {} 
-			if (party.containsKey(e.getKey()))
-				count += 1;
-		}
-		System.out.println("\tP: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/(numD+numR));
-	
-		count = 0; cor = 0;
-		for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
-			try {
-				if (party.get(e.getKey()) == 1 && count < numR)
-					cor += 1;
-				else if (party.get(e.getKey()) == 2 && count >= numR)
-					cor += 1;
+			System.out.println("\tP: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/(numD+numR));
+
+			count = 0; cor = 0;
+			for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
+				try {
+					if (party.get(e.getKey()) == 1 && e.getValue()< 0)
+						cor += 1;
+					else if (party.get(e.getKey()) == 2 && e.getValue() >= 0)
+						cor += 1;
+				}
+				catch (java.lang.NullPointerException f) {} 
+				if (party.containsKey(e.getKey()))
+					count += 1;
 			}
-			catch (java.lang.NullPointerException f) {} 
-			if (party.containsKey(e.getKey()))
-				count += 1;
-		}
-		System.out.println("\tQ: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/(numD+numR));
-		count = 0; cor = 0;
-		for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
-			try {
-				if (party.get(e.getKey()) == 2 && count < numD)
-					cor += 1;
-				else if (party.get(e.getKey()) == 1 && count >= numD)
-					cor += 1;
+			System.out.println("\tQ: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/(numD+numR));
+			count = 0; cor = 0;
+			for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
+				try {
+					if (party.get(e.getKey()) == 2 && e.getValue() < 0)
+						cor += 1;
+					else if (party.get(e.getKey()) == 1 && e.getValue() >= 0)
+						cor += 1;
+				}
+				catch (java.lang.NullPointerException f) {} 
+				if (party.containsKey(e.getKey()))
+					count += 1;
 			}
-			catch (java.lang.NullPointerException f) {} 
-			if (party.containsKey(e.getKey()))
-				count += 1;
+			System.out.println("\tQ: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/(numD+numR));
 		}
-		System.out.println("\tQ: " + cor + " out of " + count + " correct, accuracy = " + (double)cor/(numD+numR));
+
+		System.out.println("AUC:");
+		if (true) {
+			double newX = 0, newY = 0, oldX = 0, oldY = 0;
+			double upperAUC = 0, lowerAUC = 0;
+			for (Map.Entry<String, Double> e: sortedP.entrySet()) {
+				try {
+					if (party.get(e.getKey()) == 1)
+						newY += 1.0/numR;
+					else if (party.get(e.getKey()) == 2)
+						newX += 1.0/numD;
+				}
+				catch (java.lang.NullPointerException f) {}
+				upperAUC += (newX-oldX) * newY;
+				lowerAUC += (newX-oldX) * oldY;
+				oldX = newX; oldY = newY;
+			}
+			System.out.printf("\tAUC for P: AUROC between %f and %f", lowerAUC, upperAUC);
+			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
+		}
+		if (true) {
+			double newX = 0, newY = 0, oldX = 0, oldY = 0;
+			double upperAUC = 0, lowerAUC = 0;
+			for (Map.Entry<String, Double> e: sortedQ.entrySet()) {
+				try {
+					if (party.get(e.getKey()) == 1)
+						newY += 1.0/numR;
+					else if (party.get(e.getKey()) == 2)
+						newX += 1.0/numD;
+				}
+				catch (java.lang.NullPointerException f) {}
+				upperAUC += (newX-oldX) * newY;
+				lowerAUC += (newX-oldX) * oldY;
+				oldX = newX; oldY = newY;
+			}
+			System.out.printf("\tAUC for Q: AUROC between %f and %f", lowerAUC, upperAUC);
+			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
+		}
 
 		return;
 	}

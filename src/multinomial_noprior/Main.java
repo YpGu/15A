@@ -20,10 +20,10 @@ public class Main
 	// Configuration
 	public static final int K = 5;					// Number of Latent Features
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 50;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
 	public static final double THRESHOLD = Math.pow(10,-5);
 	public static final boolean USE_BKG = true;
-	public static final boolean USE_IPM = true;
+	public static final boolean USE_IPM = false;
 	public static final boolean USEB = false;			// true if we use p[i]*q[j]+b[j]; fase if we use p[i]*q[j] 
 
 	public static SparseMatrix<Integer> trainData, testData;
@@ -117,7 +117,7 @@ public class Main
 			FileParser.output("./param/p", p, invDict);
 			FileParser.output("./param/q", q, invDict);
 			FileParser.output("./param/b", b, invDict);
-			FileParser.output("./param/pi", pi, invDict);
+			FileParser.output("./param/pi", pi);
 
 			double rate = Math.abs((likelihood-oldLikelihood)/oldLikelihood);
 			if (rate < THRESHOLD && iter != 0)

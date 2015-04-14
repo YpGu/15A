@@ -26,30 +26,10 @@ public class Update
 
 		// Update \pi 
 		if (bkg && ipm) {							// update pi only if both BKG and IPM are used 
+			double oldPi0 = pi[0], oldPi1 = pi[1];
 			pi[0] = 0; pi[1] = 0;
 
 			for (int i: trainData.getXDict()) {
-				if (false) {
-					double ss = Evaluation.sumSigma(i, p, q, b);
-					double newPi0 = 0, newPi1 = 0;
-					for (int j: trainData.getRow(i)) {
-						for (int k = 0; k < K; k++) 
-							newPi0 += theta[i][k] * beta[k][j];
-						double sg = 0;
-						if (Main.USEB)
-							sg = Math.exp(p[i] * q[j] + b[j]) / ss;	// \sigma_{ij} 
-						else
-							sg = Math.exp(p[i] * q[j]) / ss;	// \sigma_{ij} 
-						newPi1 += sg;
-					}
-					newPi0 *= (1-pi[i]); newPi1 *= pi[i];
-
-					if (newPi0 + newPi1 != 0)					// update pi (next round) 	
-						pi[i] = newPi1 / (newPi0 + newPi1);
-					else
-						pi[i] = 0.5;
-				}
-
 				if (true) {							// use multinomial distribution (REMEMBER to divide by x_ij!) 
 					double ss = Evaluation.sumSigma(i, p, q, b);
 					double newPi0 = 1, newPi1 = 1;
@@ -65,7 +45,7 @@ public class Update
 							sg = Math.exp(p[i] * q[j]) / ss;	// \sigma_{ij} 
 						newPi1 *= sg;
 					}
-					newPi0 *= pi[0]; newPi1 *= pi[1];
+					newPi0 *= oldPi0; newPi1 *= oldPi1;
 
 					if (newPi0 + newPi1 != 0)				// update pi (next round) 	
 						gamma[i] = newPi1 / (newPi0 + newPi1);
@@ -75,6 +55,9 @@ public class Update
 				pi[0] += (1-gamma[i]);
 				pi[1] += gamma[i];
 			}
+			double nor = pi[0] + pi[1];
+			pi[0] /= nor;
+			pi[1] /= nor;
 		}
 
 		double l = 0;
@@ -82,7 +65,7 @@ public class Update
 			for (int iter = 0; iter < MAX_ITER_IPM; iter++) {
 				System.out.println("    *** Updating p,q,b " + iter + " ***");
 				IdealPointInference.update(trainData, gamma, theta, beta, p, q, b, reg, iterRecord);
-				l = Evaluation.calcLikelihood(trainData, pi, theta, beta, p, q, b);
+				l = Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b);
 				System.out.println("\tlogL (lower bound) = " + l);
 			}
 		}
@@ -90,7 +73,7 @@ public class Update
 			for (int iter = 0; iter < MAX_ITER_BKG; iter++) {
 				System.out.println("    *** Updating background parameters " + iter + " ***");
 				BackgroundInference.update(trainData, gamma, theta, beta);
-				l = Evaluation.calcLikelihood(trainData, pi, theta, beta, p, q, b);
+				l = Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b);
 				System.out.println("\tlogL (lower bound) = " + l);
 			}
 		}
