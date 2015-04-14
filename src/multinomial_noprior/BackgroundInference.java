@@ -9,7 +9,7 @@ public class BackgroundInference
 	public static void
 	update(
 		SparseMatrix<Integer> trainData,
-		double[] pi,							// N * 1
+		double[] gamma,							// N * 1
 		double[][] theta,						// N * K
 		double[][] beta							// K * V
 	) {
@@ -21,7 +21,7 @@ public class BackgroundInference
 		double[] sumBeta = new double[K];
 
 		for (int d: trainData.getXDict()) {
-			if (pi[d] == 1) continue;
+			if (gamma[d] == 1) continue;
 			for (int w: trainData.getRow(d)) {			// It's not necessary to update those p(z|d,w) where n(d,w) = 0 
 				double[] p_z_dw = new double[K];		// update p(z|d,w) 
 				double p_z_dw_norm = 0;
@@ -32,7 +32,7 @@ public class BackgroundInference
 				if (p_z_dw_norm == 0) p_z_dw_norm = 1;
 				for (int k = 0; k < K; k++) {			// update theta & beta
 					p_z_dw[k] /= p_z_dw_norm;
-					double v = p_z_dw[k] * trainData.get(d, w) * (1-pi[d]);	// n(i,j)*p(k|i,j)*pi(i) 
+					double v = p_z_dw[k] * trainData.get(d, w) * (1-gamma[d]);	// n(i,j)*p(k|i,j)*gamma(i)(0) 
 					tmpTheta[d][k] += v;			// theta: p(z|i) (un-normalized) 
 					sumTheta[d] += v;
 					tmpBeta[k][w] += v;			// beta: p(j|z) (un-normalized) 

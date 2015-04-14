@@ -108,7 +108,7 @@ public class Evaluation
 				else
 					p2 = Math.exp(p[i] * q[j]) / ss;		// \sigma_{ij} 
 				p2 = Math.log(p2 + Double.MIN_VALUE);
-				double prob = (1-pi[i]) * p1 + pi[i] * p2;
+				double prob = pi[0] * p1 + pi[1] * p2;
 				res += data.get(i,j) * prob;
 			}
 		}
@@ -145,7 +145,7 @@ public class Evaluation
 					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
 				else
 					p2 = Math.exp(p[i] * q[j]) / ss;
-				double prob = (1-pi[i]) * p1 + pi[i] * p2;
+				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
 				recProbs2.put(tupleID, p2);
@@ -164,7 +164,7 @@ public class Evaluation
 					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
 				else
 					p2 = Math.exp(p[i] * q[j]) / ss;
-				double prob = (1-pi[i]) * p1 + pi[i] * p2;
+				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
 				recProbs2.put(tupleID, p2);
@@ -590,7 +590,7 @@ public class Evaluation
 					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
 				else
 					p2 = Math.exp(p[i] * q[j]) / ss;
-				double prob = (1-pi[i]) * p1 + pi[i] * p2;
+				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
 				recProbs2.put(tupleID, p2);
@@ -609,7 +609,7 @@ public class Evaluation
 					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
 				else
 					p2 = Math.exp(p[i] * q[j]) / ss;
-				double prob = (1-pi[i]) * p1 + pi[i] * p2;
+				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
 				recProbs2.put(tupleID, p2);

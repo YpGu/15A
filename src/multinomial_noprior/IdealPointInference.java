@@ -11,7 +11,7 @@ public class IdealPointInference
 	public static void
 	update(
 		SparseMatrix<Integer> trainData,
-		double[] pi,
+		double[] gamma,
 		double[][] theta, double[][] beta,
 		double[] p, double[] q, double[] b,
 		double reg,									// coefficient of the regularization term 
@@ -25,7 +25,7 @@ public class IdealPointInference
 		// Update p, q, b - O(E) 
 		double[] gradP = new double[N], gradQ = new double[N], gradB = new double[N];
 		for (int i = 0; i < N; i++) {
-			if (pi[i] != 0) {
+			if (gamma[i] != 0) {
 				double ssw = Evaluation.sumSigmaWeighted(i, p, q, b);
 				double ss = Evaluation.sumSigma(i, p, q, b);
 				for (int j: trainData.getRow(i)) {
@@ -34,10 +34,10 @@ public class IdealPointInference
 						sg = Math.exp(p[i] * q[j] + b[j]) / ss;		// \sigma_{ij} 
 					else
 						sg = Math.exp(p[i] * q[j]) / ss;		// \sigma_{ij} 
-					double v = trainData.get(i, j) * pi[i];
-					gradP[i] += v * (q[j] - ssw/ss);			// \sum_j { \pi_i * n_{ij} * (q_j - weightedSum)
-					gradQ[j] += v * p[i] * (1-sg);				// \sum_i { \pi_i * n_{ij} * (1-\sigma_{ij}) * p_i 
-					gradB[j] += v * (1-sg);					// \sum_i { \pi_i * n_{ij} * (1-\sigma_{ij}) 
+					double v = trainData.get(i, j) * gamma[i];
+					gradP[i] += v * (q[j] - ssw/ss);			// \sum_j { \gamma_i * n_{ij} * (q_j - weightedSum)
+					gradQ[j] += v * p[i] * (1-sg);				// \sum_i { \gamma_i * n_{ij} * (1-\sigma_{ij}) * p_i 
+					gradB[j] += v * (1-sg);					// \sum_i { \gamma_i * n_{ij} * (1-\sigma_{ij}) 
 				}
 			}
 		}
@@ -56,8 +56,8 @@ public class IdealPointInference
 				tmpB[i] = b[i] + lr * gradB[i] - reg * b[i];
 			}
 
-			double increaseInObj = Evaluation.calcLikelihood(trainData, pi, theta, beta, tmpP, tmpQ, tmpB)
-					- Evaluation.calcLikelihood(trainData, pi, theta, beta, p, q, b);
+			double increaseInObj = Evaluation.calcLikelihood(trainData, gamma, theta, beta, tmpP, tmpQ, tmpB)
+					- Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b);
 			System.out.println("\tIncrease = " + increaseInObj + ", learning rate = " + lr);
 			if (increaseInObj > 0) break;
 

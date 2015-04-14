@@ -32,7 +32,8 @@ public class Main
 	public static Map<Integer, String> invDict;
 
 	// Model Parameters
-	public static double[] pi;					// N * 1
+	public static double[] pi;					// 2 * 1
+	public static double[] gamma;					// N * 1
 	public static double[] p, q, b;					// N * 1
 	public static double[][] theta, beta;				// N * K; K * N 
 
@@ -57,18 +58,27 @@ public class Main
 		FileParser.readData(trainDataNeg, trainDataDirNeg, dict); FileParser.readData(testDataNeg, testDataDirNeg, dict);
 		N = dict.size();
 		// Initialize Parameters 
-		pi = new double[N];
+		pi = new double[2]; gamma = new double[N];
 		p = new double[N]; q = new double[N]; b = new double[N];
 		theta = new double[N][K]; beta = new double[K][N];
-		if (!USE_BKG && USE_IPM) 				// IPM only
+		if (!USE_BKG && USE_IPM) { 				// IPM only
+			pi[0] = 0;
+			pi[1] = 1;
 			for (int i = 0; i < N; i++) 
-				pi[i] = 1;
-		if (!USE_IPM && USE_BKG)				// BKG only
+				gamma[i] = 1;
+		}
+		if (!USE_IPM && USE_BKG) {				// BKG only
+			pi[0] = 1;
+			pi[1] = 0;
 			for (int i = 0; i < N; i++)
-				pi[i] = 0;
-		if (USE_BKG && USE_IPM)					// both
+				gamma[i] = 0;
+		}
+		if (USE_BKG && USE_IPM) {					// both
+			pi[0] = 0.4 + 0.2 * rand.nextDouble();
+			pi[1] = 1 - pi[0];
 			for (int i = 0; i < N; i++) 
-				pi[i] = 0.4 + 0.2 * rand.nextDouble();
+				gamma[i] = 0.4 + 0.2 * rand.nextDouble();
+		}
 
 		for (int i = 0; i < N; i++) {
 			double sumTheta = 0;
@@ -102,7 +112,7 @@ public class Main
 		double oldLikelihood = -1;
 		for (int iter = 0; iter < MAX_ITER; iter++) {
 			System.out.println("----- Iteration " + iter + " -----");
-			double likelihood = Update.update(trainData, pi, theta, beta, p, q, b, USE_BKG, USE_IPM, iter);
+			double likelihood = Update.update(trainData, pi, gamma, theta, beta, p, q, b, USE_BKG, USE_IPM, iter);
 
 			FileParser.output("./param/p", p, invDict);
 			FileParser.output("./param/q", q, invDict);
