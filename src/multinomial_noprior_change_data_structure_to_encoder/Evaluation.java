@@ -18,36 +18,45 @@ public class Evaluation
 		return v;
 	}
 
-	// Calculate Sum: \sum_{l} { exp(p_i * q_l + b_l) }
-	public static double sumSigma(int i, double[] p, double[] q, double[] b) {
-		double res = 0;
-		for (int l = 0; l < p.length; l++) {
-			if (Main.USEB) {
-				double power = p[i] * q[l] + b[l];
-				res += Math.exp(power);
+	// Calculate Sum: exp(p_i * q_j + b_j) / \sum_{l} { exp(p_i * q_l + b_l) } for every cell (i,j)
+	public static void sumSigma(double[] p, double[] q, double[] b, double[][] ss, boolean flag) {
+		for (int i = 0; i < p.length; i++) {
+			double res = 0;
+			for (int l = 0; l < p.length; l++) {
+				if (flag) {
+					double power = p[i] * q[l] + b[l];
+					ss[i][l] = Math.exp(power);
+					res += ss[i][l];
+				}
+				else {
+					double power = p[i] * q[l];
+					ss[i][l] = Math.exp(power);
+					res += ss[i][l];
+				}	
 			}
-			else {
-				double power = p[i] * q[l];
-				res += Math.exp(power);
+			for (int l = 0; l < p.length; l++) {
+				ss[i][l] /= res;
 			}
 		}
-		return res;
+		return;
 	}
 
-	// Calculate Weighted Sum: \sum_{l} { q_l * exp(p_i * q_l + b_l) }
-	public static double sumSigmaWeighted(int i, double[] p, double[] q, double[] b) {
-		double res = 0;
-		for (int l = 0; l < p.length; l++) {
-			if (Main.USEB) {
-				double power = p[i] * q[l] + b[l];
-				res += q[l] * Math.exp(power);
-			}
-			else {
-				double power = p[i] * q[l];
-				res += q[l] * Math.exp(power);
+	// Calculate Weighted Sum: \sum_{l} { q_l * exp(p_i * q_l + b_l) } for every i
+	public static sumSigmaWeighted(double[] p, double[] q, double[] b, double[] ssw, boolean flag) {
+		for (int i = 0; i < p.length; i++) {
+			ssw[i] = 0;
+			for (int l = 0; l < p.length; l++) {
+				if (flag) {
+					double power = p[i] * q[l] + b[l];
+					ssw[i] += q[l] * Math.exp(power);
+				}
+				else {
+					double power = p[i] * q[l];
+					ssw[i] += q[l] * Math.exp(power);
+				}
 			}
 		}
-		return res;
+		return; 
 	}
 
 	// Input: log(a) and log(b); Output: log(a+b)

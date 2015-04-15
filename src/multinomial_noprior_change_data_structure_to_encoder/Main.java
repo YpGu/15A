@@ -41,22 +41,19 @@ public class Main
 	public static void
 	init(String[] args) {
 		// Init
-		trainData = new SparseMatrix<Integer>(); testData = new SparseMatrix<Integer>();
-		trainDataNeg = new SparseMatrix<Integer>(); testDataNeg = new SparseMatrix<Integer>();
 		dict = new HashMap<String, Integer>(); invDict = new HashMap<Integer, String>();
 		Random rand = new Random(0);
 		// Read Data
-		String num = "3k", rel = args[0];
 		String dictDir = "../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num;
-		String trainDataDir = "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".train";
-		String testDataDir = "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".test";
-		String trainDataDirNeg = "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".train";
-		String testDataDirNeg = "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".test";
-		dict = FileParser.readVocabulary(dictDir);
-		invDict = FileParser.readInverseVocabulary(dictDir);
-		FileParser.readData(trainData, trainDataDir, dict); FileParser.readData(testData, testDataDir, dict);
-		FileParser.readData(trainDataNeg, trainDataDirNeg, dict); FileParser.readData(testDataNeg, testDataDirNeg, dict);
+		dict = new HashMap<String, Integer>(); invDict = new HashMap<Integer, String>();
+		int totalCount = FileParser.readVocabulary(dictDir, dict);
+		FileParser.readInverseVocabulary(dictDir, invDict);
 		N = dict.size();
+
+		trainData = new int[totalCount]; testData = new int[totalCount];
+		trainDataNeg = new int[totalCount]; testDataNeg = new int[totalCount];
+		readEncodedData(trainData, testData, trainDataNeg, testDataNeg, args, fileDir, dict);
+
 		// Initialize Parameters 
 		pi = new double[2]; gamma = new double[N];
 		p = new double[N]; q = new double[N]; b = new double[N];

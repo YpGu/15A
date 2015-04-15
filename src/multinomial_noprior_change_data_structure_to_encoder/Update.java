@@ -15,7 +15,8 @@ public class Update
 	// Estimate Variational Parameters using EM 
 	public static double
 	update(
-		SparseMatrix<Integer> trainData,
+//		SparseMatrix<Integer> trainData,
+		int[] trainData,
 		double[] pi, double[] gamma,
 		double[][] theta, double[][] beta,
 		double[] p, double[] q, double[] b,
@@ -29,29 +30,27 @@ public class Update
 			double oldPi0 = pi[0], oldPi1 = pi[1];
 			pi[0] = 0; pi[1] = 0;
 
-			for (int i: trainData.getXDict()) {
-				if (true) {							// use multinomial distribution (REMEMBER to divide by x_ij!) 
-					double ss = Evaluation.sumSigma(i, p, q, b);
-					double newPi0 = 1, newPi1 = 1;
-					for (int j: trainData.getRow(i)) {
-						double delta = 0;				// mixture 0
-						for (int k = 0; k < K; k++) 
-							delta += theta[i][k] * beta[k][j];
-						newPi0 *= delta;
-						double sg = 0;					// mixture 1
-						if (Main.USEB)
-							sg = Math.exp(p[i] * q[j] + b[j]) / ss;	// \sigma_{ij} 
-						else
-							sg = Math.exp(p[i] * q[j]) / ss;	// \sigma_{ij} 
-						newPi1 *= sg;
-					}
-					newPi0 *= oldPi0; newPi1 *= oldPi1;
+			double[][] sg = new double[N][N];
+			sumSigma(p, q, b, sg, Main.USEB);
 
-					if (newPi0 + newPi1 != 0)				// update pi (next round) 	
-						gamma[i] = newPi1 / (newPi0 + newPi1);
-					else
-						gamma[i] = 0.5;
-				}
+			for (int enc: trainData) {
+				int j = enc%N;
+				int i = enc/N;
+
+				// use multinomial distribution (REMEMBER to divide by x_ij!) 
+				double newPi0 = 1, newPi1 = 1;
+				double delta = 0;					// mixture 0
+				for (int k = 0; k < K; k++) 
+					delta += theta[i][k] * beta[k][j];
+				newPi0 *= delta;
+				double sg = sg[i][j];					// mixture 1
+				newPi1 *= sg;
+
+				newPi0 *= oldPi0; newPi1 *= oldPi1;
+				if (newPi0 + newPi1 != 0)				// update pi (next round) 	
+					gamma[i] = newPi1 / (newPi0 + newPi1);
+				else
+					gamma[i] = 0.5;
 				pi[0] += (1-gamma[i]);
 				pi[1] += gamma[i];
 			}
@@ -64,17 +63,17 @@ public class Update
 		if (ipm) {
 			for (int iter = 0; iter < MAX_ITER_IPM; iter++) {
 				System.out.println("    *** Updating p,q,b " + iter + " ***");
-				IdealPointInference.update(trainData, gamma, theta, beta, p, q, b, reg, iterRecord);
-				l = Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b);
-				System.out.println("\tlogL (lower bound) = " + l);
+//				IdealPointInference.update(trainData, gamma, theta, beta, p, q, b, reg, iterRecord);
+//				l = Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b);
+//				System.out.println("\tlogL (lower bound) = " + l);
 			}
 		}
 		if (bkg) {
 			for (int iter = 0; iter < MAX_ITER_BKG; iter++) {
 				System.out.println("    *** Updating background parameters " + iter + " ***");
-				BackgroundInference.update(trainData, gamma, theta, beta);
-				l = Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b);
-				System.out.println("\tlogL (lower bound) = " + l);
+//				BackgroundInference.update(trainData, gamma, theta, beta);
+//				l = Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b);
+//				System.out.println("\tlogL (lower bound) = " + l);
 			}
 		}
 

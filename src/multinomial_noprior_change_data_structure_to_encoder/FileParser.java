@@ -7,6 +7,75 @@ import java.io.*;
 
 public class FileParser
 {
+	public static void 
+	readEncodedData(
+		int[] trainData, int [] testData, int[] trainDataNeg, int[] testDataNeg, 
+		String[] args, String fileDir, 
+		Map<String, Integer> dict
+	) {
+		// Init
+		int N = dict.size();
+		SparseMatrix<Integer> trainDataM = new SparseMatrix<Integer>(); SparseMatrix<Integer> testDataM = new SparseMatrix<Integer>();
+		SparseMatrix<Integer> trainDataNegM = new SparseMatrix<Integer>(); SparseMatrix<Integer> testDataNegM = new SparseMatrix<Integer>();
+		// Read Data
+		String num = "3k", rel = args[0];
+		String trainDataDir = "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".train";
+		String testDataDir = "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".test";
+		String trainDataDirNeg = "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".train";
+		String testDataDirNeg = "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".test";
+
+		readData(trainDataM, trainDataDir, dict); 
+		readData(testDataM, testDataDir, dict);
+		readData(trainDataNegM, trainDataDirNeg, dict); 
+		readData(testDataNegM, testDataDirNeg, dict);
+
+		if (true) {
+			int count = 0;
+			for (int i: trainDataM.getXDict()) {
+				for (int j: trainDataM.getRow(i)) {
+					int enc = i*N+j;
+					trainData[count] = enc;
+					count += 1;
+				}
+			}
+		}
+
+		if (true) {
+			int count = 0;
+			for (int i: testDataM.getXDict()) {
+				for (int j: testDataM.getRow(i)) {
+					int enc = i*N+j;
+					testData[count] = enc;
+					count += 1;
+				}
+			}
+		}
+
+		if (true) {
+			int count = 0;
+			for (int i: trainDataNegM.getXDict()) {
+				for (int j: trainDataNegM.getRow(i)) {
+					int enc = i*N+j;
+					trainDataNeg[count] = enc;
+					count += 1;
+				}
+			}
+		}
+
+		if (true) {
+			int count = 0;
+			for (int i: testDataNegM.getXDict()) {
+				for (int j: testDataNegM.getRow(i)) {
+					int enc = i*N+j;
+					testDataNeg[count] = enc;
+					count += 1;
+				}
+			}
+		}
+
+		return;
+	}
+
 	public static void
 	readData(SparseMatrix<Integer> data, String fileDir, Map<String, Integer> dict) {
 		try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
@@ -38,9 +107,8 @@ public class FileParser
 	}
 
 	// Read Vocabulary: String -> Integer
-	public static Map<String, Integer>
-	readVocabulary(String fileDir) {
-		Map<String, Integer> res = new HashMap<String, Integer>();
+	public static int
+	readVocabulary(String fileDir, Map<String, Integer> res) {
 		int lineID = 0;
 		try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
 			String currentLine;
@@ -55,13 +123,12 @@ public class FileParser
 			e.printStackTrace();
 		}
 
-		return res;
+		return lineID;
 	}
 
 	// Read Inverse Vocabulary: Integer -> String
-	public static Map<Integer, String>
-	readInverseVocabulary(String fileDir) {
-		Map<Integer, String> res = new HashMap<Integer, String>();
+	public static void
+	readInverseVocabulary(String fileDir, Map<Integer, String> res) {
 		int lineID = 0;
 		try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
 			String currentLine;
@@ -76,7 +143,7 @@ public class FileParser
 			e.printStackTrace();
 		}
 
-		return res;
+		return;
 	}
 
 	/// write to file
