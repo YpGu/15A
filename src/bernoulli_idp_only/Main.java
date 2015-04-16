@@ -1,7 +1,7 @@
 /**
 	03/30/2015 
 
-	Mixture.java: implement the unified model with two multinomial mixtures
+	Main.java: implement the unified model with two multinomial mixtures
 
 	The first mixture is background;
 	The second mixture is ideal point;
@@ -19,7 +19,7 @@ public class Main
 {
 	// Configuration
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 10;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
 	public static final double THRESHOLD = Math.pow(10,-5);
 	public static final boolean USE_IPM = true;
 	public static final boolean USEB = true;			// true if we use p[i]*q[j]+b[j]; fase if we use p[i]*q[j] 
@@ -39,7 +39,6 @@ public class Main
 		trainData = new SparseMatrix<Integer>(); testData = new SparseMatrix<Integer>();
 		trainDataNeg = new SparseMatrix<Integer>(); testDataNeg = new SparseMatrix<Integer>();
 		dict = new HashMap<String, Integer>(); invDict = new HashMap<Integer, String>();
-		Random rand = new Random(0);
 		// Read Data
 		String num = "3k", rel = args[0];
 		String dictDir = "../../data/" + num + "_" + rel + "/" + rel + "_dict_" + num;
@@ -54,12 +53,18 @@ public class Main
 		N = dict.size();
 		// Initialize Parameters 
 		p = new double[N]; q = new double[N]; b = new double[N];
+		FileParser.readInit(p, "./init/P");
+		FileParser.readInit(q, "./init/Q");
+		FileParser.readInit(b, "./init/B");
+/*
+		Random rand = new Random(10);
 		for (int i = 0; i < N; i++) {
-			double pqRange = 6;
+			double pqRange = 1;
 			p[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
 			q[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
 			b[i] = -0.5 + rand.nextDouble();
 		}
+*/
 	}
 
 	// Train

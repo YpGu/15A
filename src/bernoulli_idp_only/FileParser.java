@@ -8,6 +8,24 @@ import java.io.*;
 public class FileParser
 {
 	public static void
+	readInit(double[] arr, String fileDir) {
+		int index = 0;
+		try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
+			String currentLine;
+			while ((currentLine = br.readLine()) != null) {
+				arr[index] = Double.parseDouble(currentLine);
+				index += 1;
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return;
+	}
+
+
+	public static void
 	readData(SparseMatrix<Integer> data, String fileDir, Map<String, Integer> dict) {
 		try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
 			String currentLine;

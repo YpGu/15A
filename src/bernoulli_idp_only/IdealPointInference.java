@@ -6,9 +6,10 @@ import java.util.*;
 
 public class IdealPointInference
 {
-	public static double LR = 0.0001;
+	public static double LR = 0.0003;
+	public static double LR_M = LR/100;
 
-	public static void
+	public static double
 	update(
 		SparseMatrix<Integer> trainData, SparseMatrix<Integer> negData,
 		double[] p, double[] q, double[] b,
@@ -19,6 +20,7 @@ public class IdealPointInference
 		double[] tmpP = new double[N], tmpQ = new double[N], tmpB = new double[N];
 
 		if (iterRecord%10 == 9) LR *= 1.2;						// provide some chances for LR to increase 
+		if (LR < LR_M) LR = LR_M;
 
 		// Update p, q, b - O(E) 
 		double c = N*(N-1) / (double)trainData.getSize() - 1;
@@ -47,15 +49,15 @@ public class IdealPointInference
 		// Line Search 
 		int count = 0;
 		double lr = LR;
+		double res = 0;
 		while (true) {
 			for (int i = 0; i < N; i++) {
 				tmpP[i] = p[i] + lr * gradP[i] - reg * p[i];
 				tmpQ[i] = q[i] + lr * gradQ[i] - reg * q[i];
 				tmpB[i] = b[i] + lr * gradB[i] - reg * b[i];
 			}
-
-			double increaseInObj = Evaluation.calcLikelihood(trainData, negData, tmpP, tmpQ, tmpB)
-					- Evaluation.calcLikelihood(trainData, negData, p, q, b);
+			res = Evaluation.calcLikelihood(trainData, negData, tmpP, tmpQ, tmpB);
+			double increaseInObj = res - Evaluation.calcLikelihood(trainData, negData, p, q, b);
 			System.out.println("\tIncrease = " + increaseInObj + ", learning rate = " + lr);
 			if (increaseInObj > 0) break;
 
@@ -66,12 +68,13 @@ public class IdealPointInference
 		if (count != 0) LR *= 0.5;
 
 		// Update 
-		if (count != 5) {
+//		if (count != 5) {
+		if (true) {
 			for (int i = 0; i < N; i++) {
 				p[i] = tmpP[i]; q[i] = tmpQ[i]; b[i] = tmpB[i];
 			}
 		}
 
-		return;
+		return res;
 	}
 }

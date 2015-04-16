@@ -96,13 +96,13 @@ public class Evaluation
 		for (int i: data.getXDict()) {
 			for (int j: data.getRow(i)) {
 				double prob = logis(p[i]*q[j]+b[j]);
-				res += data.get(i,j) * Math.log(prob + Double.MIN_VALUE);
+				res += Math.log(prob + Double.MIN_VALUE);
 			}
 		}
 		for (int i: negData.getXDict()) {
 			for (int j: data.getRow(i)) {
 				double prob = 1-logis(p[i]*q[j]+b[j]);
-				res += data.get(i,j) * Math.log(prob + Double.MIN_VALUE) * c;
+				res += Math.log(prob + Double.MIN_VALUE) * c;
 			}
 		}
 
@@ -765,11 +765,9 @@ public class Evaluation
 				String rawID = tokens[1];
 				if (tokens[3].equals("R")) {
 					party.put(rawID, 1);
-					numR += 1;
 				}
 				else if (tokens[3].equals("D")) {
 					party.put(rawID, 2);
-					numD += 1;
 				}
 			}
 		}
@@ -783,6 +781,8 @@ public class Evaluation
 			if (party.containsKey(rawID)) {
 				mapP.put(rawID, p[i]);
 				mapQ.put(rawID, q[i]);
+				if (party.get(rawID) == 1) numR += 1;
+				if (party.get(rawID) == 2) numD += 1;
 			}
 		}
 		Map<String, Double> sortedP = ArrayTools.ValueComparator.sortByValue(mapP);
