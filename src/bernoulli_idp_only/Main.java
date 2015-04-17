@@ -19,7 +19,7 @@ public class Main
 {
 	// Configuration
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 20;				// Maximum Number of Iterations 
 	public static final double THRESHOLD = Math.pow(10,-5);
 	public static final boolean USE_IPM = true;
 	public static final boolean USEB = true;			// true if we use p[i]*q[j]+b[j]; fase if we use p[i]*q[j] 
@@ -56,6 +56,8 @@ public class Main
 		FileParser.readInit(p, "./init/P");
 		FileParser.readInit(q, "./init/Q");
 		FileParser.readInit(b, "./init/B");
+		double initObj = Evaluation.calcLikelihood(trainData, trainDataNeg, p, q, b);
+		System.out.println("Init Obj = " + initObj);
 /*
 		Random rand = new Random(10);
 		for (int i = 0; i < N; i++) {
@@ -65,6 +67,13 @@ public class Main
 			b[i] = -0.5 + rand.nextDouble();
 		}
 */
+		FileParser.output("./param/p", p, invDict);
+		FileParser.output("./param/q", q, invDict);
+		FileParser.output("./param/b", b, invDict);
+
+		Scanner sc = new Scanner(System.in);
+		System.out.println("Please input:");
+		int gu = sc.nextInt();
 	}
 
 	// Train
@@ -82,6 +91,9 @@ public class Main
 			double rate = Math.abs((likelihood-oldLikelihood)/oldLikelihood);
 			if (rate < THRESHOLD && iter != 0)
 				break;
+
+			Scanner sc = new Scanner(System.in);
+			int gu = sc.nextInt();
 		}
 
 		return;

@@ -23,7 +23,6 @@ public class Update
 		for (int iter = 0; iter < MAX_ITER_IPM; iter++) {
 			System.out.println("    *** Updating p,q,b " + iter + " ***");
 			l = IdealPointInference.update(trainData, trainDataNeg, p, q, b, reg, iterRecord);
-//			l = Evaluation.calcLikelihood(trainData, trainDataNeg, p, q, b);
 			System.out.println("\tlogL (lower bound) = " + l);
 		}
 

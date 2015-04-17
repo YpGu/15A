@@ -12,10 +12,12 @@ public class Evaluation
 
 	// Logistic Function
 	public static double logis(double x) {
-		double v = 1;
-		if (x < 100)
-			v = 1 - 1 / (1 + Math.exp(x));
-		return v;
+		if (x > 100) return 1;
+		else return Math.pow(Math.E, x) / (1 + Math.pow(Math.E, x));
+//		double v = 1;
+//		if (x < 100)
+//			v = 1 - 1 / (1 + Math.exp(x));
+//		return v;
 	}
 
 	// Calculate Sum: \sum_{l} { exp(p_i * q_l + b_l) }
@@ -91,6 +93,8 @@ public class Evaluation
 		double[] p, double[] q, double[] b
 	) {
 		int N = p.length;
+		System.out.println("Pos Size = " + data.getSize());
+		System.out.println("Neg Size = " + negData.getSize());
 		double res = 0;
 		double c = N*(N-1) / (double)data.getSize() - 1;
 		for (int i: data.getXDict()) {
@@ -100,7 +104,7 @@ public class Evaluation
 			}
 		}
 		for (int i: negData.getXDict()) {
-			for (int j: data.getRow(i)) {
+			for (int j: negData.getRow(i)) {
 				double prob = 1-logis(p[i]*q[j]+b[j]);
 				res += Math.log(prob + Double.MIN_VALUE) * c;
 			}

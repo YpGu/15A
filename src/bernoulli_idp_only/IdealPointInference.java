@@ -6,7 +6,7 @@ import java.util.*;
 
 public class IdealPointInference
 {
-	public static double LR = 0.0003;
+	public static double LR = 0.0005;
 	public static double LR_M = LR/100;
 
 	public static double
@@ -19,11 +19,14 @@ public class IdealPointInference
 		int N = p.length;
 		double[] tmpP = new double[N], tmpQ = new double[N], tmpB = new double[N];
 
-		if (iterRecord%10 == 9) LR *= 1.2;						// provide some chances for LR to increase 
+//		if (iterRecord%10 == 9) LR *= 1.2;						// provide some chances for LR to increase 
 		if (LR < LR_M) LR = LR_M;
 
 		// Update p, q, b - O(E) 
 		double c = N*(N-1) / (double)trainData.getSize() - 1;
+//		double c = 1;
+		System.out.println("c = " + c);
+
 		double[] gradP = new double[N], gradQ = new double[N], gradB = new double[N];
 		for (int i: trainData.getXDict()) {
 			for (int j: trainData.getRow(i)) {

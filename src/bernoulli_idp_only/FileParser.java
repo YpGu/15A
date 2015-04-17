@@ -209,4 +209,19 @@ public class FileParser
 			e.printStackTrace();
 		}
 	}
+
+        public static void
+        outputSave(
+                String fileDir,
+                int x, int y, double v
+        ) {
+                try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(fileDir, true)))) {
+                        writer.printf("%d\t%d\t%f\n", x, y, v);
+                }
+                catch (IOException e) {
+                        e.printStackTrace();
+                }
+                return;
+        }
+
 }
