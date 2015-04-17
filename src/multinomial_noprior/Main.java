@@ -19,9 +19,9 @@ import java.io.*;
 public class Main
 {
 	// Configuration
-	public static final int K = 50;					// Number of Latent Features
+	public static final int K = 5;					// Number of Latent Features
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 20;				// Maximum Number of Iterations 
 	public static final double THRESHOLD = Math.pow(10,-5);
 	public static final boolean USE_BKG = true;
 	public static final boolean USE_IPM = true;
@@ -52,6 +52,8 @@ public class Main
 		p = new double[N]; q = new double[N]; b = new double[N];
 		theta = new double[N][K]; beta = new double[K][N];
 		InitReader.init(pi, gamma, p, q, b, theta, beta, USE_BKG, USE_IPM, K, option);
+
+		System.out.println("Size of invDict = " + invDict.size());
 
 		return;
 	}

@@ -23,21 +23,20 @@ public class IdealPointInference
 		if (iterRecord%10 == 0) LR *= 1.2;						// provide some chances for LR to increase 
 
 		// Update p, q, b - O(E) 
+		double[][] sg = new double[N][N];						// \sigma_{ij} 
+		double[] ss = new double[N];							// \sum_{i} {\sigma_{ij}} 
+		Evaluation.sumSigma(p, q, b, sg, ss);
+		double[] ssw = new double[N];							// \sum_{i} {q_j \sigma_{ij}} 
+		Evaluation.sumSigmaWeighted(p, q, b, ssw);
+
 		double[] gradP = new double[N], gradQ = new double[N], gradB = new double[N];
 		for (int i = 0; i < N; i++) {
 			if (gamma[i] != 0) {
-				double ssw = Evaluation.sumSigmaWeighted(i, p, q, b);
-				double ss = Evaluation.sumSigma(i, p, q, b);
 				for (int j: trainData.getRow(i)) {
-					double sg = 0;
-					if (Main.USEB)
-						sg = Math.exp(p[i] * q[j] + b[j]) / ss;		// \sigma_{ij} 
-					else
-						sg = Math.exp(p[i] * q[j]) / ss;		// \sigma_{ij} 
 					double v = trainData.get(i, j) * gamma[i];
-					gradP[i] += v * (q[j] - ssw/ss);			// \sum_j { \gamma_i * n_{ij} * (q_j - weightedSum)
-					gradQ[j] += v * p[i] * (1-sg);				// \sum_i { \gamma_i * n_{ij} * (1-\sigma_{ij}) * p_i 
-					gradB[j] += v * (1-sg);					// \sum_i { \gamma_i * n_{ij} * (1-\sigma_{ij}) 
+					gradP[i] += v * (q[j] - ssw[i]/ss[i]);			// \sum_j { \gamma_i * n_{ij} * (q_j - weightedSum)
+					gradQ[j] += v * p[i] * (1-sg[i][j]);			// \sum_i { \gamma_i * n_{ij} * (1-\sigma_{ij}) * p_i 
+					gradB[j] += v * (1-sg[i][j]);				// \sum_i { \gamma_i * n_{ij} * (1-\sigma_{ij}) 
 				}
 			}
 		}

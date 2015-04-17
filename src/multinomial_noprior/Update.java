@@ -7,9 +7,10 @@ import java.util.*;
 public class Update
 {
 	// Learning Rate
-	public static final double reg = 0.001;
+//	public static final double reg = 0.001;
+	public static final double reg = 0;
 
-	public static final int MAX_ITER_IPM = 3;
+	public static final int MAX_ITER_IPM = 10;
 	public static final int MAX_ITER_BKG = 3;
 
 	// Estimate Variational Parameters using EM 
@@ -25,25 +26,22 @@ public class Update
 		int N = p.length, K = beta.length;
 
 		// Update \pi 
-		if (bkg && ipm) {							// update pi only if both BKG and IPM are used 
+		if (bkg && ipm) {								// update pi only if both BKG and IPM are used 
 			double oldPi0 = pi[0], oldPi1 = pi[1];
 			pi[0] = 0; pi[1] = 0;
 
+			double[][] sg = new double[N][N];
+			double[] ss = new double[N];
+
 			for (int i: trainData.getXDict()) {
 				if (true) {							// use multinomial distribution (REMEMBER to divide by x_ij!) 
-					double ss = Evaluation.sumSigma(i, p, q, b);
 					double newPi0 = 1, newPi1 = 1;
 					for (int j: trainData.getRow(i)) {
 						double delta = 0;				// mixture 0
 						for (int k = 0; k < K; k++) 
 							delta += theta[i][k] * beta[k][j];
 						newPi0 *= delta;
-						double sg = 0;					// mixture 1
-						if (Main.USEB)
-							sg = Math.exp(p[i] * q[j] + b[j]) / ss;	// \sigma_{ij} 
-						else
-							sg = Math.exp(p[i] * q[j]) / ss;	// \sigma_{ij} 
-						newPi1 *= sg;
+						newPi1 *= sg[i][j];
 					}
 					newPi0 *= oldPi0; newPi1 *= oldPi1;
 

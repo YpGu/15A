@@ -73,8 +73,8 @@ public class InitReader
 		String testDataDir = "../../data/" + num + "_" + rel + "/" + rel + "_list_" + num + ".test";
 		String trainDataDirNeg = "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".train";
 		String testDataDirNeg = "../../data/" + num + "_" + rel + "/n_" + rel + "_list_" + num + ".test";
-		dict = FileParser.readVocabulary(dictDir);
-		invDict = FileParser.readInverseVocabulary(dictDir);
+		FileParser.readVocabulary(dictDir, dict);
+		FileParser.readInverseVocabulary(dictDir, invDict);
 		FileParser.readData(trainData, trainDataDir, dict); 
 		FileParser.readData(testData, testDataDir, dict);
 		FileParser.readData(trainDataNeg, trainDataDirNeg, dict); 

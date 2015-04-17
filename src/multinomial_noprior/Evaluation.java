@@ -18,36 +18,44 @@ public class Evaluation
 		return v;
 	}
 
-	// Calculate Sum: \sum_{l} { exp(p_i * q_l + b_l) }
-	public static double sumSigma(int i, double[] p, double[] q, double[] b) {
-		double res = 0;
-		for (int l = 0; l < p.length; l++) {
-			if (Main.USEB) {
-				double power = p[i] * q[l] + b[l];
-				res += Math.exp(power);
+	// Calculate Sum: \sum_{l} { exp(p_i * q_l + b_l) } for each cell 
+	public static void sumSigma(double[] p, double[] q, double[] b, double[][] sigma, double[] ss) {
+		for (int i = 0; i < p.length; i++) {
+			ss[i] = 0;
+			for (int l = 0; l < p.length; l++) {
+				if (Main.USEB) {
+					double power = p[i] * q[l] + b[l];
+					sigma[i][l] = Math.exp(power);
+					ss[i] += sigma[i][l];
+				}
+				else {
+					double power = p[i] * q[l];
+					sigma[i][l] = Math.exp(power);
+					ss[i] += sigma[i][l];
+				}
 			}
-			else {
-				double power = p[i] * q[l];
-				res += Math.exp(power);
+			for (int l = 0; l < p.length; l++) {
+				sigma[i][l] /= ss[i];
 			}
 		}
-		return res;
+		return;
 	}
 
-	// Calculate Weighted Sum: \sum_{l} { q_l * exp(p_i * q_l + b_l) }
-	public static double sumSigmaWeighted(int i, double[] p, double[] q, double[] b) {
-		double res = 0;
-		for (int l = 0; l < p.length; l++) {
-			if (Main.USEB) {
-				double power = p[i] * q[l] + b[l];
-				res += q[l] * Math.exp(power);
-			}
-			else {
-				double power = p[i] * q[l];
-				res += q[l] * Math.exp(power);
+	// Calculate Weighted Sum: \sum_{l} { q_l * exp(p_i * q_l + b_l) } for each i 
+	public static void sumSigmaWeighted(double[] p, double[] q, double[] b, double[] ssw) {
+		for (int i = 0; i < p.length; i++) {
+			for (int l = 0; l < p.length; l++) {
+				if (Main.USEB) {
+					double power = p[i] * q[l] + b[l];
+					ssw[i] += q[l] * Math.exp(power);
+				}
+				else {
+					double power = p[i] * q[l];
+					ssw[i] += q[l] * Math.exp(power);
+				}
 			}
 		}
-		return res;
+		return;
 	}
 
 	// Input: log(a) and log(b); Output: log(a+b)
@@ -94,20 +102,18 @@ public class Evaluation
 	) {
 		int K = beta.length, N = p.length;
 
+		double[][] sg = new double[N][N];
+		double[] ss = new double[N];
+		sumSigma(p, q, b, sg, ss);
+
 		double res = 0;
 		for (int i: data.getXDict()) {
-			double ss = sumSigma(i, p, q, b);
 			for (int j: data.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
 				p1 = Math.log(p1 + Double.MIN_VALUE);
-				double p2 = 0;
-				if (Main.USEB)
-					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;		// \sigma_{ij} 
-				else
-					p2 = Math.exp(p[i] * q[j]) / ss;		// \sigma_{ij} 
-				p2 = Math.log(p2 + Double.MIN_VALUE);
+				double p2 = Math.log(sg[i][j] + Double.MIN_VALUE);
 				double prob = (1-gamma[i]) * p1 + gamma[i] * p2;
 				res += data.get(i,j) * prob;
 			}
@@ -133,18 +139,17 @@ public class Evaluation
 		Set<Integer> posGroundTruth = new HashSet<Integer>();
 		Set<Integer> negGroundTruth = new HashSet<Integer>();
 
+		double[][] sg = new double[N][N];
+		double[] ss = new double[N];
+		sumSigma(p, q, b, sg, ss);
+
 		int tupleID = 0;
 		for (int i = 0; i < N; i++) {
-			double ss = sumSigma(i, p, q, b);
 			for (int j: posData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = 0;
-				if (Main.USEB)
-					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
-				else
-					p2 = Math.exp(p[i] * q[j]) / ss;
+				double p2 = sg[i][j];
 				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
@@ -154,16 +159,11 @@ public class Evaluation
 			}
 		}
 		for (int i = 0; i < N; i++) {
-			double ss = sumSigma(i, p, q, b);
 			for (int j: negData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = 0;
-				if (Main.USEB)
-					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
-				else
-					p2 = Math.exp(p[i] * q[j]) / ss;
+				double p2 = sg[i][j];
 				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
@@ -301,7 +301,7 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.printf("\tUsing background model: AUROC between %f and %f", lowerAUC, upperAUC);
+			System.out.printf("\t  Using background model: AUROC between %f and %f", lowerAUC, upperAUC);
 			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 		if (true) {
@@ -326,7 +326,7 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.printf("\tUsing ideal point model: AUROC between %f and %f", lowerAUC, upperAUC);
+			System.out.printf("\t  Using ideal point model: AUROC between %f and %f", lowerAUC, upperAUC);
 			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 
@@ -350,18 +350,17 @@ public class Evaluation
 		Set<Integer> posGroundTruth = new HashSet<Integer>();
 		Set<Integer> negGroundTruth = new HashSet<Integer>();
 
+		double[][] sg = new double[N][N];
+		double[] ss = new double[N];
+		sumSigma(p, q, b, sg, ss);
+
 		int tupleID = 0;
 		for (int i = 0; i < N; i++) {
-			double ss = sumSigma(i, p, q, b);
 			for (int j: posData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = 0;
-				if (Main.USEB)
-					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
-				else
-					p2 = Math.exp(p[i] * q[j]) / ss;
+				double p2 = sg[i][j];
 				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
@@ -371,16 +370,11 @@ public class Evaluation
 			}
 		}
 		for (int i = 0; i < N; i++) {
-			double ss = sumSigma(i, p, q, b);
 			for (int j: negData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = 0;
-				if (Main.USEB)
-					p2 = Math.exp(p[i] * q[j] + b[j]) / ss;
-				else
-					p2 = Math.exp(p[i] * q[j]) / ss;
+				double p2 = sg[i][j];
 				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
@@ -515,7 +509,7 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.printf("\tUsing background model: AUPRC between %f and %f", lowerAUC, upperAUC);
+			System.out.printf("\t  Using background model: AUPRC between %f and %f", lowerAUC, upperAUC);
 			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 		if (true) {
@@ -538,7 +532,7 @@ public class Evaluation
 				oldX = newX;
 				oldY = newY;
 			}
-			System.out.printf("\tUsing ideal point model: AUPRC between %f and %f", lowerAUC, upperAUC);
+			System.out.printf("\t  Using ideal point model: AUPRC between %f and %f", lowerAUC, upperAUC);
 			System.out.println(" (newY = " + newY + " newX = " + newX + ")");
 		}
 

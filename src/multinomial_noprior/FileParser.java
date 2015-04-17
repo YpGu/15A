@@ -38,9 +38,8 @@ public class FileParser
 	}
 
 	// Read Vocabulary: String -> Integer
-	public static Map<String, Integer>
-	readVocabulary(String fileDir) {
-		Map<String, Integer> res = new HashMap<String, Integer>();
+	public static void 
+	readVocabulary(String fileDir, Map<String, Integer> res) {
 		int lineID = 0;
 		try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
 			String currentLine;
@@ -55,13 +54,12 @@ public class FileParser
 			e.printStackTrace();
 		}
 
-		return res;
+		return;
 	}
 
 	// Read Inverse Vocabulary: Integer -> String
-	public static Map<Integer, String>
-	readInverseVocabulary(String fileDir) {
-		Map<Integer, String> res = new HashMap<Integer, String>();
+	public static void
+	readInverseVocabulary(String fileDir, Map<Integer, String> res) {
 		int lineID = 0;
 		try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
 			String currentLine;
@@ -76,7 +74,7 @@ public class FileParser
 			e.printStackTrace();
 		}
 
-		return res;
+		return;
 	}
 
 	/// write to file
