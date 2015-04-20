@@ -34,9 +34,10 @@ public class IdealPointInference
 			if (gamma[i] != 0) {
 				for (int j: trainData.getRow(i)) {
 					double v = trainData.get(i, j) * gamma[i];
-					gradP[i] += v * (q[j] - ssw[i]/ss[i]);			// \sum_j { \gamma_i * n_{ij} * (q_j - weightedSum)
+					gradP[i] += v * (q[j] - ssw[i]/ss[i]);			// \sum_j { \gamma_i * n_{ij} * (q_j - weightedSum/sum)
 					gradQ[j] += v * p[i] * (1-sg[i][j]);			// \sum_i { \gamma_i * n_{ij} * (1-\sigma_{ij}) * p_i 
-					gradB[j] += v * (1-sg[i][j]);				// \sum_i { \gamma_i * n_{ij} * (1-\sigma_{ij}) 
+					if (Main.USEB)
+						gradB[j] += v * (1-sg[i][j]);			// \sum_i { \gamma_i * n_{ij} * (1-\sigma_{ij}) 
 				}
 			}
 		}
@@ -52,11 +53,12 @@ public class IdealPointInference
 			for (int i = 0; i < N; i++) {
 				tmpP[i] = p[i] + lr * gradP[i] - reg * p[i];
 				tmpQ[i] = q[i] + lr * gradQ[i] - reg * q[i];
-				tmpB[i] = b[i] + lr * gradB[i] - reg * b[i];
+				if (Main.USEB)
+					tmpB[i] = b[i] + lr * gradB[i] - reg * b[i];
 			}
 
-			double increaseInObj = Evaluation.calcLikelihood(trainData, gamma, theta, beta, tmpP, tmpQ, tmpB)
-					- Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b);
+			double increaseInObj = Evaluation.calcLikelihood(trainData, gamma, theta, beta, tmpP, tmpQ, tmpB, reg)
+					- Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b, reg);
 			System.out.println("\tIncrease = " + increaseInObj + ", learning rate = " + lr);
 			if (increaseInObj > 0) break;
 
@@ -67,7 +69,8 @@ public class IdealPointInference
 		if (count != 0) LR *= 0.5;
 
 		// Update 
-		if (count != 5) {
+//		if (count != 5) {
+		if (true) {
 			for (int i = 0; i < N; i++) {
 				p[i] = tmpP[i]; q[i] = tmpQ[i]; b[i] = tmpB[i];
 			}

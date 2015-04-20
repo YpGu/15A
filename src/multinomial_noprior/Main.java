@@ -23,7 +23,7 @@ public class Main
 	public static int N;						// Number of Users
 	public static final int MAX_ITER = 20;				// Maximum Number of Iterations 
 	public static final double THRESHOLD = Math.pow(10,-5);
-	public static final boolean USE_BKG = true;
+	public static final boolean USE_BKG = false;
 	public static final boolean USE_IPM = true;
 	public static final boolean USEB = false;			// true if we use p[i]*q[j]+b[j]; fase if we use p[i]*q[j] 
 

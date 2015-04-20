@@ -98,7 +98,8 @@ public class Evaluation
 		SparseMatrix<Integer> data,
 		double[] gamma,
 		double[][] theta, double[][] beta,
-		double[] p, double[] q, double[] b
+		double[] p, double[] q, double[] b,
+		double reg
 	) {
 		int K = beta.length, N = p.length;
 
@@ -117,6 +118,11 @@ public class Evaluation
 				double prob = (1-gamma[i]) * p1 + gamma[i] * p2;
 				res += data.get(i,j) * prob;
 			}
+		}
+
+		for (int i = 0; i < N; i++) {
+			res -= 0.5 * reg * p[i] * p[i];
+			res -= 0.5 * reg * q[i] * q[i];
 		}
 
 		return res;

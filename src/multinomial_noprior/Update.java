@@ -7,11 +7,11 @@ import java.util.*;
 public class Update
 {
 	// Learning Rate
-//	public static final double reg = 0.001;
-	public static final double reg = 0;
+	public static final double reg = 0.01;
+//	public static final double reg = 0;
 
 	public static final int MAX_ITER_IPM = 10;
-	public static final int MAX_ITER_BKG = 3;
+	public static final int MAX_ITER_BKG = 1;
 
 	// Estimate Variational Parameters using EM 
 	public static double
@@ -63,7 +63,7 @@ public class Update
 			for (int iter = 0; iter < MAX_ITER_IPM; iter++) {
 				System.out.println("    *** Updating p,q,b " + iter + " ***");
 				IdealPointInference.update(trainData, gamma, theta, beta, p, q, b, reg, iterRecord);
-				l = Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b);
+				l = Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b, reg);
 				System.out.println("\tlogL (lower bound) = " + l);
 			}
 		}
@@ -71,7 +71,7 @@ public class Update
 			for (int iter = 0; iter < MAX_ITER_BKG; iter++) {
 				System.out.println("    *** Updating background parameters " + iter + " ***");
 				BackgroundInference.update(trainData, gamma, theta, beta);
-				l = Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b);
+				l = Evaluation.calcLikelihood(trainData, gamma, theta, beta, p, q, b, reg);
 				System.out.println("\tlogL (lower bound) = " + l);
 			}
 		}
