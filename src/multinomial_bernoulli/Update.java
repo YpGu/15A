@@ -7,8 +7,8 @@ import java.util.*;
 public class Update
 {
 	// Learning Rate
-	public static final double reg = 0.1;
-//	public static final double reg = 0;
+//	public static final double reg = 0.1;
+	public static final double reg = 0;
 
 	public static final int MAX_ITER_IPM = 3;
 	public static final int MAX_ITER_BKG = 1;
@@ -90,9 +90,9 @@ public class Update
 				pi[0] += (1-gamma[i]);
 				pi[1] += gamma[i];
 			}
-			double nor = pi[0] + pi[1];
-			pi[0] /= nor;
-			pi[1] /= nor;
+			double norm = pi[0] + pi[1];
+			pi[0] /= norm;
+			pi[1] /= norm;
 		}
 
 		double l = 0;

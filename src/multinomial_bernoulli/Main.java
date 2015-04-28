@@ -2,8 +2,8 @@
 	04/20/2015 
 	Main.java: implement the unified model with two multinomial mixtures
 
-	The first mixture is background;
-	The second mixture is ideal point;
+	The first mixture is background (multinomial);
+	The second mixture is ideal point (multivariate bernoulli);
 
 	If we want to build the model purely based on background, set USE_BKG to true and USE_IPM to false;
 	If we want to build the model purely based on ideal point, set USE_BKG to false and USE_IPM to true
@@ -12,6 +12,8 @@
 
 	04/20/2015
 	Problem exists in how to evaluate p(i--j), since it's unfair to directly compare the two mixtures 
+	04/25/2015
+	Solved: do not evaluate p(i--j); use perplexity instead 
 **/
 
 import java.util.*;
@@ -93,7 +95,8 @@ public class Main
 		Evaluation.auroc(testData, testDataNeg, pi, theta, beta, p, q, b, 1);
 		Evaluation.auprc(testData, testDataNeg, pi, theta, beta, p, q, b, 1);
 
-/*		System.out.println("Training (aver):");
+/*
+		System.out.println("Training (aver):");
 		Evaluation.auroc2(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
 		Evaluation.auprc2(trainData, trainDataNeg, alpha, beta, pi, p, q, b, gamma, phi, varphi, 1);
 		System.out.println("Testing (aver):");

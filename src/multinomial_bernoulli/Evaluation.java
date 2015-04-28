@@ -100,20 +100,31 @@ public class Evaluation
 
 		double res = 0;
 		for (int i: data.getXDict()) {
+			// likelihood of each user-count vector x_i 
+			// bkg: multinomial; idp: multivariate Bernoulli 
+			double p1 = 0;
+			int count = data.getRow(i).size();		// N_i! 
 			for (int j: data.getRow(i)) {
-				double p1 = 0;
+				double v = 0;
 				for (int k = 0; k < K; k++) 
-					p1 += theta[i][k] * beta[k][j];
-				p1 = Math.log(p1 + Double.MIN_VALUE);
-				double p2 = Math.log(sg[i][j] + Double.MIN_VALUE) - Math.log(1 - sg[i][j] + Double.MIN_VALUE);
-				double prob = (1-gamma[i]) * p1 + gamma[i] * p2;
-				res += data.get(i,j) * prob;
+					v += theta[i][k] * beta[k][j];
+				p1 += Math.log(count * v + Double.MIN_VALUE);
+				count -= 1;
+			}
+			p1 *= (1-gamma[i]);
+
+			double p2 = 0;
+			for (int j: data.getRow(i)) {
+				p2 += Math.log(sg[i][j] + Double.MIN_VALUE);
+				p2 -= Math.log(1 - sg[i][j] + Double.MIN_VALUE);
 			}
 			for (int j = 0; j < N; j++) {
-				double p2 = Math.log(1 - sg[i][j] + Double.MIN_VALUE);
-				double prob = gamma[i] * p2;
-				res += prob;
+				p2 += Math.log(1 - sg[i][j] + Double.MIN_VALUE);
 			}
+			p2 *= gamma[i];
+
+			double prob = p1 + p2;
+			res += prob;
 		}
 
 		for (int i = 0; i < N; i++) {
@@ -145,12 +156,19 @@ public class Evaluation
 		sumSigma(p, q, b, sg);
 
 		int tupleID = 0;
+		double[] v = new double[N];
+		for (int i = 0; i < N; i++) {
+			v[i] = 1;
+			for (int j = 0; j < N; j++) 
+				v[i] *= (1 - sg[i][j] + Double.MIN_VALUE);
+		}
+
 		for (int i = 0; i < N; i++) {
 			for (int j: posData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = sg[i][j];
+				double p2 = v[i] * (sg[i][j] + Double.MIN_VALUE) / (1 - sg[i][j] + Double.MIN_VALUE);
 				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
@@ -158,15 +176,13 @@ public class Evaluation
 				posGroundTruth.add(tupleID);
 				tupleID += 1;
 			}
-//			for (int j = 0; j < N; j++) {
-//				double p2 = 
 		}
 		for (int i = 0; i < N; i++) {
 			for (int j: negData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = sg[i][j];
+				double p2 = v[i] * (sg[i][j] + Double.MIN_VALUE) / (1 - sg[i][j] + Double.MIN_VALUE);
 				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
@@ -354,16 +370,22 @@ public class Evaluation
 		Set<Integer> negGroundTruth = new HashSet<Integer>();
 
 		double[][] sg = new double[N][N];
-		double[] ss = new double[N];
-		sumSigma(p, q, b, sg, ss);
+		sumSigma(p, q, b, sg);
 
 		int tupleID = 0;
+		double[] v = new double[N];
+		for (int i = 0; i < N; i++) {
+			v[i] = 1;
+			for (int j = 0; j < N; j++) 
+				v[i] *= (1 - sg[i][j] + Double.MIN_VALUE);
+		}
+
 		for (int i = 0; i < N; i++) {
 			for (int j: posData.getRow(i)) {
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = sg[i][j];
+				double p2 = v[i] * (sg[i][j] + Double.MIN_VALUE) / (1 - sg[i][j] + Double.MIN_VALUE);
 				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
@@ -377,7 +399,7 @@ public class Evaluation
 				double p1 = 0;
 				for (int k = 0; k < K; k++) 
 					p1 += theta[i][k] * beta[k][j];
-				double p2 = sg[i][j];
+				double p2 = v[i] * (sg[i][j] + Double.MIN_VALUE) / (1 - sg[i][j] + Double.MIN_VALUE);
 				double prob = pi[0] * p1 + pi[1] * p2;
 				recProbs.put(tupleID, prob);
 				recProbs1.put(tupleID, p1);
