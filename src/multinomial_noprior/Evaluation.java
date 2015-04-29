@@ -109,14 +109,17 @@ public class Evaluation
 
 		double res = 0;
 		for (int i: data.getXDict()) {
+			int count = data.getRow(i).size();			// N_i! 
 			for (int j: data.getRow(i)) {
-				double p1 = 0;
+				double v = 0;
 				for (int k = 0; k < K; k++) 
-					p1 += theta[i][k] * beta[k][j];
-				p1 = Math.log(p1 + Double.MIN_VALUE);
-				double p2 = Math.log(sg[i][j] + Double.MIN_VALUE);
+					v += theta[i][k] * beta[k][j];
+				double p1 = Math.log(count * v + Double.MIN_VALUE);
+				double p2 = Math.log(count * sg[i][j] + Double.MIN_VALUE);
 				double prob = (1-gamma[i]) * p1 + gamma[i] * p2;
 				res += data.get(i,j) * prob;
+
+				count -= 1;
 			}
 		}
 

@@ -87,6 +87,7 @@ public class InitReader
 	public static void
 	init(
 		double[] pi, double[] gamma, double[] p, double[] q, double[] b, double[][] theta, double[][] beta, 
+		Map<String, Integer> dict,
 		boolean USE_BKG, boolean USE_IPM,
 		int K,
 		int option
@@ -131,13 +132,41 @@ public class InitReader
 			for (int j = 0; j < N; j++) 
 				beta[k][j] /= sumBeta;
 		}
+
 		if (true) {							// use random init
+
+			try (BufferedReader br = new BufferedReader(new FileReader("../bernoulli_idp_only/param/p"))) {
+				String currentLine;
+				while ((currentLine = br.readLine()) != null) {
+					String aa = currentLine.split("\t")[0].trim();
+					String bb = currentLine.split("\t")[1].trim();
+					int i = dict.get(aa);
+					p[i] = Double.parseDouble(bb);
+				}
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+			try (BufferedReader br = new BufferedReader(new FileReader("../bernoulli_idp_only/param/q"))) {
+				String currentLine;
+				while ((currentLine = br.readLine()) != null) {
+					String aa = currentLine.split("\t")[0].trim();
+					String bb = currentLine.split("\t")[1].trim();
+					int i = dict.get(aa);
+					q[i] = Double.parseDouble(bb);
+				}
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+/*
 			for (int i = 0; i < N; i++) {
 				double pqRange = 6;
 				p[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
 				q[i] = -0.5 * pqRange + pqRange * rand.nextDouble();
 				b[i] = -0.5 + rand.nextDouble();
 			}
+*/
 		}
 
 		return;

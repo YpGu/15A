@@ -1,16 +1,20 @@
 /**
 	03/30/2015 
-
 	Mixture.java: implement the unified model with two multinomial mixtures
 
-	The first mixture is background;
-	The second mixture is ideal point;
+	The first mixture is background (multinomial: \theta_ik * \beta_kj);
+	The second mixture is ideal point (multinomial logit: exp(p_i * q_j) then normalize);
 
 	If we want to build the model purely based on background, set USE_BKG to true and USE_IPM to false;
 	If we want to build the model purely based on ideal point, set USE_BKG to false and USE_IPM to true
 
 	If we want to use the bias term in ideal point model, set USEB to true; otherwise, set USEB to false
 
+	04/20/2015
+	In order to use settings.ini, we can create a global HashMap variable and parse it into every class 
+
+	04/26/2015
+	Modified input source for p and q in InitReader.java
 **/
 
 import java.util.*;
@@ -19,11 +23,11 @@ import java.io.*;
 public class Main
 {
 	// Configuration
-	public static final int K = 5;					// Number of Latent Features
+	public static final int K = 16;					// Number of Latent Features
 	public static int N;						// Number of Users
-	public static final int MAX_ITER = 20;				// Maximum Number of Iterations 
+	public static final int MAX_ITER = 100;				// Maximum Number of Iterations 
 	public static final double THRESHOLD = Math.pow(10,-5);
-	public static final boolean USE_BKG = false;
+	public static final boolean USE_BKG = true;
 	public static final boolean USE_IPM = true;
 	public static final boolean USEB = false;			// true if we use p[i]*q[j]+b[j]; fase if we use p[i]*q[j] 
 
@@ -51,7 +55,7 @@ public class Main
 		pi = new double[2]; gamma = new double[N];
 		p = new double[N]; q = new double[N]; b = new double[N];
 		theta = new double[N][K]; beta = new double[K][N];
-		InitReader.init(pi, gamma, p, q, b, theta, beta, USE_BKG, USE_IPM, K, option);
+		InitReader.init(pi, gamma, p, q, b, theta, beta, dict, USE_BKG, USE_IPM, K, option);
 
 		System.out.println("Size of invDict = " + invDict.size());
 

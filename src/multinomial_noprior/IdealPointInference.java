@@ -6,7 +6,7 @@ import java.util.*;
 
 public class IdealPointInference
 {
-	public static double LR = 0.001;
+	public static double LR = 0.0001;
 
 	public static void
 	update(
